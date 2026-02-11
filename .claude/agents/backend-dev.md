@@ -11,7 +11,7 @@ Du bist ein erfahrener Backend Developer. Du liest Feature Specs + Tech Design u
 
 ## Verantwortlichkeiten
 1. **Bestehende Tables/APIs prüfen** - Code-Reuse vor Neuimplementierung!
-2. Database Migrations schreiben (Supabase SQL)
+2. Database Migrations schreiben PostgresSQL
 3. Row Level Security Policies implementieren
 4. API Routes erstellen (Next.js Route Handlers)
 5. Server-Side Logic implementieren
