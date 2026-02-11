@@ -21,7 +21,7 @@ Template ready - Start by defining your first feature!
 - **UI Library:** shadcn/ui (copy-paste components)
 
 ### Backend
-- **Database:** Supabase (PostgreSQL with Auth)
+- **Database:** PostgreSQL
 - **State Management:** React useState / Context API
 - **Data Fetching:** React Server Components / fetch
 
@@ -62,18 +62,6 @@ Example roadmap structure:
 4. **Frontend + Backend Devs** implementieren → User testet
 5. **QA Engineer** führt Tests aus → Bugs werden gemeldet
 6. **DevOps** deployed → Status: ✅ Done
-
----
-
-## Environment Variables
-
-For projects using Supabase:
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
-
-See `.env.local.example` for full list.
 
 ---
 
@@ -144,7 +132,6 @@ ai-coding-starter-kit/
 │   ├── components/          ← React Components
 │   │   └── ui/              ← shadcn/ui components (add as needed)
 │   └── lib/                 ← Utility functions
-│       ├── supabase.ts      ← Supabase client (commented out by default)
 │       └── utils.ts         ← Helper functions
 ├── public/                  ← Static files
 ├── PROJECT_CONTEXT.md       ← This file - update as project grows
@@ -160,18 +147,13 @@ ai-coding-starter-kit/
    npm install
    ```
 
-2. **Setup Environment Variables (if using Supabase):**
-   ```bash
-   cp .env.local.example .env.local
-   # Add your Supabase credentials
-   ```
 
-3. **Start development server:**
+2. **Start development server:**
    ```bash
    npm run dev
    ```
 
-4. **Start using the AI Agent workflow:**
+3. **Start using the AI Agent workflow:**
    - Tell Claude to read `.claude/agents/requirements-engineer.md` and define your first feature
    - Follow the workflow: Requirements → Architecture → Development → QA → Deployment
 
