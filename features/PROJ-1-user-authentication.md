@@ -1,6 +1,6 @@
 # PROJ-1: User Authentication
 
-## Status: 🟡 In Progress (Frontend Complete)
+## Status: ✅ Complete (Backend + Frontend Complete)
 
 ## Überblick
 Login-System für Mitarbeiter und Admins der "HofZeit" Zeiterfassungs-App. Authentifizierung erfolgt mit E-Mail und Passwort. Inkl. Passwort-Reset und "Angemeldet bleiben" Funktionalität.

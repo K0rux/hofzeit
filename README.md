@@ -1,47 +1,71 @@
-# AI Coding Starter Kit – Production-Ready Template
+# HofZeit - Zeiterfassungs-App
 
-> **Build scalable, production-ready web apps faster** with AI agents handling Requirements, Architecture, Development, QA, and Deployment.
+> **Moderne Zeiterfassungs-Lösung** für Mitarbeiter und Admins mit JWT-basierter Authentication und PostgreSQL-Backend.
 
-This template includes everything you need for professional AI-powered development:
-- ✅ **Next.js 16** (latest) with TypeScript + Tailwind CSS
-- ✅ **6 Production-Ready AI Agents** (Requirements → Deployment)
-- ✅ **Production Guides** (Error Tracking, Security, Performance, Scaling)
-- ✅ **Feature Changelog System** (Agents know what already exists → Code Reuse)
-- ✅ **PM-Friendly** (No code in specs, automatic handoffs between agents)
-- ✅ **Supabase-Ready** (optional)
-- ✅ **shadcn/ui-Ready** (add components as needed)
-- ✅ **Vercel Deployment-Ready**
+**Aktueller Status:**
+- ✅ **User Authentication** - Login, Logout, Passwort-Reset (Backend + Frontend Complete)
+- ✅ **PostgreSQL Database** - Drizzle ORM mit Type-Safe Queries
+- ✅ **JWT Sessions** - Sichere Authentifizierung mit HttpOnly Cookies
+- ✅ **SMTP E-Mail** - Passwort-Reset via eigener SMTP-Server
+- ✅ **Rate Limiting** - Brute-Force-Schutz für Login & Reset
+- ✅ **shadcn/ui** - Moderne UI-Komponenten
+- 🚧 **Zeiterfassung** - In Planung (PROJ-2)
+- 🚧 **Admin-Panel** - In Planung (PROJ-3)
 
 ---
 
 ## Quick Start
 
-### 1. Clone & Install
+### 1. Install Dependencies
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-coding-starter-kit.git my-project
-cd my-project
 npm install
 ```
 
-### 2. (Optional) Supabase Setup
+### 2. PostgreSQL einrichten
 
-If you need a backend:
+Siehe [BACKEND_SETUP.md](BACKEND_SETUP.md) für detaillierte Anleitung.
 
-1. Create Supabase Project: [supabase.com](https://supabase.com)
-2. Copy `.env.local.example` to `.env.local`
-3. Add your Supabase credentials
-4. Activate Supabase Client in `src/lib/supabase.ts` (uncomment code)
+**Kurzversion:**
+```bash
+# PostgreSQL lokal installieren oder Cloud-Anbieter nutzen (Supabase, Neon, Railway)
+# Datenbank "hofzeit" erstellen
+```
 
-**Skip this step** if you're building frontend-only (landing pages, portfolios, etc.)
+### 3. Environment Variables konfigurieren
 
-### 3. Start Development Server
+```bash
+cp .env.local.example .env.local
+# Dann .env.local ausfüllen:
+# - DATABASE_URL
+# - JWT_SECRET
+# - SMTP_* (für E-Mail-Versand)
+```
+
+### 4. Database Migrations ausführen
+
+```bash
+npm run db:generate
+npm run db:push
+```
+
+### 5. Test-User erstellen
+
+```bash
+# Passwort-Hash generieren
+npx tsx scripts/hash-password.ts admin123
+
+# Dann User in Drizzle Studio einfügen
+npm run db:studio
+```
+
+### 6. Development Server starten
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) und logge dich ein!
 
 ### 4. Use AI Agents
 
@@ -165,13 +189,16 @@ Agent guides you through deployment + Production-Ready setup (Error Tracking, Se
 
 | Category | Tool | Why? |
 |----------|------|------|
-| **Framework** | Next.js 16 | React + Server Components + Routing |
+| **Framework** | Next.js 16 | React + App Router + Server Actions |
 | **Language** | TypeScript | Type Safety |
 | **Styling** | Tailwind CSS | Utility-First CSS |
-| **UI Library** | shadcn/ui | Copy-Paste Components |
-| **Backend** | Supabase (optional) | PostgreSQL + Auth + Storage |
+| **UI Library** | shadcn/ui | Accessible Components |
+| **Database** | PostgreSQL | Relational Database |
+| **ORM** | Drizzle ORM | Type-Safe SQL Queries |
+| **Auth** | Custom JWT | Volle Kontrolle, keine Vendor-Lock-In |
+| **E-Mail** | SMTP (nodemailer) | Eigener Mail-Server oder Provider |
+| **Rate Limiting** | Upstash/In-Memory | Brute-Force-Schutz |
 | **Deployment** | Vercel | Zero-Config Next.js Hosting |
-| **Error Tracking** | Sentry (optional) | Production Error Monitoring |
 
 ---
 
@@ -249,27 +276,39 @@ Agent guides you through deployment + Production-Ready setup (Error Tracking, Se
 
 ## Documentation
 
-### Template Docs
+### Backend Documentation
+- [BACKEND_SETUP.md](BACKEND_SETUP.md) – Komplette Setup-Anleitung
+- [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) – API-Endpoints Reference
+- [features/PROJ-1-user-authentication.md](features/PROJ-1-user-authentication.md) – Feature Spec
+
+### AI Agent Docs
 - [HOW_TO_USE_AGENTS.md](HOW_TO_USE_AGENTS.md) – Agent usage guide
-- [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) – Project documentation template
-- [TEMPLATE_CHANGELOG.md](TEMPLATE_CHANGELOG.md) – Template version history
 - [features/README.md](features/README.md) – Feature spec format
 
 ### External Docs
 - [Next.js Docs](https://nextjs.org/docs)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [Drizzle ORM Docs](https://orm.drizzle.team)
 - [shadcn/ui Docs](https://ui.shadcn.com)
-- [Supabase Docs](https://supabase.com/docs)
+- [PostgreSQL Docs](https://www.postgresql.org/docs)
 
 ---
 
 ## Scripts
 
 ```bash
-npm run dev        # Start development server (localhost:3000)
-npm run build      # Production build
-npm run start      # Start production server
-npm run lint       # Run ESLint
+# Development
+npm run dev              # Start development server (localhost:3000)
+npm run build            # Production build
+npm run start            # Start production server
+npm run lint             # Run ESLint
+
+# Database
+npm run db:generate      # Generate migrations from schema
+npm run db:push          # Push schema changes to database
+npm run db:studio        # Open Drizzle Studio (GUI)
+
+# Testing
+npm run test:smtp        # Test SMTP connection
 ```
 
 ---
