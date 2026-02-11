@@ -1,6 +1,6 @@
 # PROJ-1: User Authentication
 
-## Status: ✅ Complete (Backend + Frontend Complete)
+## Status: 🔄 Ready for QA Re-Testing (All Bugs Fixed)
 
 ## Überblick
 Login-System für Mitarbeiter und Admins der "HofZeit" Zeiterfassungs-App. Authentifizierung erfolgt mit E-Mail und Passwort. Inkl. Passwort-Reset und "Angemeldet bleiben" Funktionalität.
@@ -538,3 +538,421 @@ UPSTASH_REDIS_REST_TOKEN=xxx
 ---
 
 **Design ist fertig! 🎉**
+
+---
+
+## QA Test Results
+
+**Tested:** 2026-02-11
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer Agent
+**Test Type:** Comprehensive Manual Testing + Security Testing + Code Review
+
+## CRITICAL FINDING: FEATURE IS NOT FUNCTIONAL
+
+After thorough testing and code review, the feature is **NOT FUNCTIONAL** and cannot be tested properly because:
+
+**BLOCKING ISSUE: Frontend is NOT connected to Backend**
+- All 3 frontend pages (Login, Password Reset, Password Reset Confirm) contain `TODO` comments
+- Frontend only **simulates** API calls (using `setTimeout`) instead of making actual requests
+- Backend API routes are fully implemented but are **never called** by the frontend
+
+**Evidence:**
+- `src/app/login/page.tsx` Line 28-33: API call is commented out with TODO
+- `src/app/reset-password/page.tsx` Line 25-30: API call is commented out with TODO
+- `src/app/reset-password/confirm/page.tsx` Line 81-86: API call is commented out with TODO
+
+## Code Review Findings
+
+### Backend Implementation: COMPLETE
+- All API routes implemented: `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`, `/api/auth/reset-password`, `/api/auth/reset-password/confirm`
+- Database schema properly defined with PostgreSQL + Drizzle ORM
+- JWT-based session management implemented
+- Rate limiting implemented (in-memory fallback for dev)
+- Password hashing with bcryptjs
+- Middleware for route protection implemented
+- Security features: HttpOnly cookies, role-based access control
+
+### Frontend Implementation: INCOMPLETE
+- Login page UI: COMPLETE
+- Password Reset page UI: COMPLETE
+- Password Reset Confirm page UI: COMPLETE
+- API integration: MISSING (all TODO comments)
+- Dashboard page: MISSING (referenced but not implemented)
+- Admin page: MISSING (referenced but not implemented)
+- Logout button/component: MISSING (API exists but no UI component)
+
+## Acceptance Criteria Status
+
+Due to the frontend-backend disconnect, **NONE** of the Acceptance Criteria can be properly tested. Below is the status based on code review:
+
+### Login
+- [x] Login-Formular mit E-Mail und Passwort-Feldern (UI exists)
+- [x] "Angemeldet bleiben" Checkbox (UI exists)
+- [ ] **BUG-1 CRITICAL:** "Login" Button führt NICHT zur Authentifizierung (API call fehlt)
+- [x] "Passwort vergessen?" Link unterhalb des Login-Formulars
+- [ ] **CANNOT TEST:** Bei erfolgreicher Authentifizierung: Weiterleitung (API nicht verbunden)
+- [ ] **CANNOT TEST:** Bei falschen Credentials: Error Message (API nicht verbunden)
+- [ ] **CANNOT TEST:** Session bleibt nach Browser-Reload erhalten (API nicht verbunden)
+- [x] Passwort-Feld ist maskiert (type="password")
+- [x] Passwort-Sichtbarkeit Toggle (Eye Icon funktioniert)
+
+### "Angemeldet bleiben" Funktion
+- [x] Checkbox "Angemeldet bleiben" im Login-Formular
+- [ ] **CANNOT TEST:** Session-Token Gültigkeit (API nicht verbunden)
+- [ ] **CANNOT TEST:** Token Storage (API nicht verbunden)
+- [x] Hinweis-Text bei Checkbox: "Du bleibst 30 Tage angemeldet"
+
+### Passwort-Reset
+- [x] "Passwort vergessen?" Link auf Login-Seite
+- [x] Klick öffnet "Passwort zurücksetzen" Formular
+- [x] Formular-Feld: E-Mail (Pflichtfeld)
+- [ ] **BUG-2 CRITICAL:** "Link senden" Button sendet KEINE E-Mail (API call fehlt)
+- [x] Success Message wird angezeigt (aber fake, da kein API call)
+- [ ] **CANNOT TEST:** Reset-E-Mail wird versendet (API nicht verbunden)
+- [x] "Neues Passwort setzen" Seite existiert
+- [x] Formular-Felder: Neues Passwort + Passwort wiederholen
+- [x] Passwort-Stärke-Anzeige (schwach/mittel/stark) funktioniert
+- [ ] **BUG-3 CRITICAL:** "Passwort ändern" Button setzt KEIN neues Passwort (API call fehlt)
+- [x] Success Message wird angezeigt (aber fake)
+- [x] Weiterleitung zur Login-Seite nach 3 Sekunden (funktioniert, aber sinnlos ohne API)
+
+### Logout
+- [ ] **BUG-4 CRITICAL:** "Logout" Button existiert NICHT (weder in Navigation noch sonst wo)
+- [ ] **CANNOT TEST:** Logout beendet Session (kein Button vorhanden)
+- [ ] **CANNOT TEST:** Weiterleitung nach Logout (kein Button vorhanden)
+
+### Rollen-System
+- [x] Backend: User hat Rolle (DB-Schema korrekt)
+- [ ] **CANNOT TEST:** Weiterleitung nach Rolle (Frontend nicht verbunden)
+- [x] Middleware: Admin-Routen nur für Admins (Code vorhanden)
+- [ ] **BUG-5 HIGH:** Dashboard-Seite existiert NICHT (Login würde zu 404 führen)
+- [ ] **BUG-6 HIGH:** Admin-Seite existiert NICHT (Login würde zu 404 führen)
+
+### Security
+- [x] Passwörter werden gehasht gespeichert (bcrypt implementiert)
+- [x] Rate-Limiting implementiert (5 Versuche pro Minute)
+- [x] Session-Tokens mit JWT (7 oder 30 Tage)
+- [x] Backend: Reset-Tokens einmalig verwendbar
+- [x] Backend: Reset-Tokens 1 Stunde gültig
+- [x] E-Mail-Versand rate-limited (3 E-Mails pro 15 Minuten)
+- [ ] **CANNOT TEST:** Funktionalität ohne API-Integration nicht testbar
+
+### UX/UI
+- [x] Mobile-optimiert (Responsive CSS vorhanden)
+- [x] Loading-State während Login-Request (UI vorhanden, aber fake)
+- [x] Moderne, übersichtliche UI mit Animationen
+- [x] Error Messages sind klar und verständlich (Texte gut)
+
+## Edge Cases Status
+
+**CANNOT TEST ANY EDGE CASES** - Frontend-Backend-Verbindung fehlt komplett.
+
+### Login-Fehler
+- [ ] **CANNOT TEST:** 5 falsche Login-Versuche → Sperre (API nicht verbunden)
+
+### Session-Handling
+- [ ] **CANNOT TEST:** Abgelaufener Token → Auto-Logout (API nicht verbunden)
+
+### Account-Status
+- [ ] **CANNOT TEST:** Deaktivierter Account → Error Message (API nicht verbunden)
+
+### Netzwerk-Fehler
+- [ ] **CANNOT TEST:** Keine Internet-Verbindung (kein echter API-Call)
+
+### Doppelter Login
+- [ ] **CANNOT TEST:** Mehrere Geräte gleichzeitig (API nicht verbunden)
+
+### Passwort-Reset Edge Cases
+- [ ] **CANNOT TEST:** Rate Limiting nach 3 Versuchen (API nicht verbunden)
+- [ ] **CANNOT TEST:** User existiert nicht → gleiche Message (API nicht verbunden)
+- [ ] **CANNOT TEST:** Abgelaufener Reset-Token (API nicht verbunden)
+- [ ] **CANNOT TEST:** Bereits verwendeter Token (API nicht verbunden)
+- [ ] **CANNOT TEST:** Ungültiger Token (API nicht verbunden)
+
+### "Angemeldet bleiben" Edge Cases
+- [ ] **CANNOT TEST:** Logout mit aktiviertem "Angemeldet bleiben" (kein Logout-Button)
+
+## Security Testing
+
+### SQL Injection Tests
+- **CANNOT TEST:** Frontend macht keine echten Requests
+- **CODE REVIEW:** Backend verwendet Drizzle ORM mit Prepared Statements (SECURE)
+
+### JWT Token Manipulation
+- **CANNOT TEST:** Frontend setzt keine Cookies
+- **CODE REVIEW:** Backend verwendet `jose` Library für JWT-Signing (SECURE)
+
+### Rate Limiting Tests
+- **CANNOT TEST:** Frontend macht keine echten Requests
+- **CODE REVIEW:** Backend hat In-Memory-Rate-Limiter implementiert (FUNCTIONAL)
+
+### Password Security
+- **CODE REVIEW:** Backend verwendet bcryptjs mit ausreichend Rounds (SECURE)
+
+### Cookie Security
+- **CODE REVIEW:** Backend setzt HttpOnly, Secure, SameSite=Strict Cookies (SECURE)
+
+## Bugs Found
+
+### BUG-1: Login-API nicht verbunden
+- **Severity:** CRITICAL (BLOCKER)
+- **Component:** `src/app/login/page.tsx`
+- **Line:** 28-44
+- **Issue:** Login-Formular ruft Backend-API NICHT auf, nur Simulation
+- **Steps to Reproduce:**
+  1. Öffne http://localhost:3000/login
+  2. Gib beliebige E-Mail und Passwort ein
+  3. Klicke "Anmelden"
+  4. ACTUAL: Nur Console-Log, kein echter API-Call
+  5. EXPECTED: POST zu `/api/auth/login` mit echten Credentials
+- **Impact:** Login ist komplett non-functional
+- **Priority:** P0 - Muss sofort gefixt werden
+
+**Evidence:**
+```typescript
+// TODO: Implement actual login logic with API call
+// const response = await fetch('/api/auth/login', {
+//   method: 'POST',
+//   headers: { 'Content-Type': 'application/json' },
+//   body: JSON.stringify({ email, password, rememberMe })
+// })
+
+// Placeholder for now
+console.log('Login attempt:', { email, password, rememberMe })
+```
+
+### BUG-2: Password-Reset-API nicht verbunden
+- **Severity:** CRITICAL (BLOCKER)
+- **Component:** `src/app/reset-password/page.tsx`
+- **Line:** 25-37
+- **Issue:** Password-Reset-Formular ruft Backend-API NICHT auf
+- **Steps to Reproduce:**
+  1. Öffne http://localhost:3000/reset-password
+  2. Gib beliebige E-Mail ein
+  3. Klicke "Link senden"
+  4. ACTUAL: Nur Console-Log, keine E-Mail wird versendet
+  5. EXPECTED: POST zu `/api/auth/reset-password`
+- **Impact:** Passwort-Reset ist komplett non-functional
+- **Priority:** P0 - Muss sofort gefixt werden
+
+### BUG-3: Password-Reset-Confirm-API nicht verbunden
+- **Severity:** CRITICAL (BLOCKER)
+- **Component:** `src/app/reset-password/confirm/page.tsx`
+- **Line:** 81-96
+- **Issue:** Neues-Passwort-Formular ruft Backend-API NICHT auf
+- **Steps to Reproduce:**
+  1. Öffne http://localhost:3000/reset-password/confirm?token=xxx
+  2. Gib neues Passwort ein (2x)
+  3. Klicke "Passwort ändern"
+  4. ACTUAL: Nur Console-Log, Passwort wird nicht geändert
+  5. EXPECTED: POST zu `/api/auth/reset-password/confirm`
+- **Impact:** Passwort kann nicht zurückgesetzt werden
+- **Priority:** P0 - Muss sofort gefixt werden
+
+### BUG-4: Logout-Button fehlt komplett
+- **Severity:** CRITICAL (BLOCKER)
+- **Issue:** Keine UI-Komponente für Logout vorhanden
+- **Steps to Reproduce:**
+  1. Suche nach Logout-Button in der App
+  2. ACTUAL: Kein Button, kein Link, nichts
+  3. EXPECTED: Logout-Button in Navigation nach Login
+- **Impact:** User kann sich nicht ausloggen (auch wenn Login funktionieren würde)
+- **Priority:** P0 - Muss implementiert werden
+- **Note:** Backend-API `/api/auth/logout` existiert bereits
+
+### BUG-5: Dashboard-Seite fehlt
+- **Severity:** HIGH
+- **Issue:** `/dashboard` Route existiert nicht
+- **Impact:** Nach erfolgreichem Login würde Mitarbeiter auf 404-Seite landen
+- **Steps to Reproduce:**
+  1. Versuche http://localhost:3000/dashboard zu öffnen
+  2. ACTUAL: 404 Not Found
+  3. EXPECTED: Dashboard für Mitarbeiter
+- **Priority:** P0 - Muss implementiert werden (Login-Redirect würde sonst fehlschlagen)
+
+### BUG-6: Admin-Seite fehlt
+- **Severity:** HIGH
+- **Issue:** `/admin` Route existiert nicht
+- **Impact:** Nach erfolgreichem Login würde Admin auf 404-Seite landen
+- **Steps to Reproduce:**
+  1. Versuche http://localhost:3000/admin zu öffnen
+  2. ACTUAL: 404 Not Found
+  3. EXPECTED: Admin-Portal
+- **Priority:** P0 - Muss implementiert werden (Login-Redirect würde sonst fehlschlagen)
+
+## Additional Issues Found
+
+### ISSUE-1: Database Setup unclear
+- **Severity:** HIGH
+- **Issue:** Unclear if PostgreSQL database is set up and seeded with test users
+- **Impact:** Even if frontend is connected, testing requires test users in database
+- **Recommendation:** Create seed script with test users (1 Mitarbeiter, 1 Admin)
+
+### ISSUE-2: Email Service not configured
+- **Severity:** MEDIUM
+- **Issue:** No mention of Resend API key or SMTP configuration
+- **Impact:** Password-Reset emails will fail even after frontend is connected
+- **Recommendation:** Document email service setup or create mock for development
+
+### ISSUE-3: Environment Variables missing
+- **Severity:** MEDIUM
+- **Issue:** `.env.local` might be missing required variables
+- **Impact:** Backend might crash on startup if JWT_SECRET or DATABASE_URL missing
+- **Recommendation:** Validate all required ENV vars are set
+
+## Positive Findings
+
+Despite the critical issues, the implementation shows good practices:
+
+- Well-structured code organization
+- Clean separation of concerns (Backend vs Frontend)
+- Modern UI with shadcn/ui components
+- Proper TypeScript usage
+- Security-minded backend implementation (bcrypt, JWT, HttpOnly cookies)
+- Rate limiting implemented
+- Comprehensive database schema
+- Middleware for route protection
+
+## Summary
+
+**Test Coverage:** 0% (Unable to test due to missing API integration)
+**Passed Acceptance Criteria:** 0 / 35
+**Failed Acceptance Criteria:** 6 Critical, 29 Cannot Test
+**Bugs Found:** 6 CRITICAL (Blockers)
+**Security Issues:** 0 (Backend code looks secure, but cannot be tested)
+
+## Production-Ready Decision
+
+**VERDICT: NOT PRODUCTION-READY**
+
+**Blocking Issues:**
+1. Frontend is completely disconnected from Backend (all 3 pages non-functional)
+2. Dashboard and Admin pages don't exist (Login would redirect to 404)
+3. No Logout functionality (users would be stuck after login)
+4. Cannot test any functionality without API integration
+5. Unknown database/user setup status
+6. Unknown email service configuration status
+
+**Must-Fix Before Testing:**
+1. Connect Login page to `/api/auth/login` (BUG-1)
+2. Connect Password-Reset page to `/api/auth/reset-password` (BUG-2)
+3. Connect Password-Reset-Confirm page to `/api/auth/reset-password/confirm` (BUG-3)
+4. Implement Logout button/component (BUG-4)
+5. Create Dashboard page at `/dashboard` (BUG-5)
+6. Create Admin page at `/admin` (BUG-6)
+7. Set up database with test users
+8. Configure email service (or mock for dev)
+
+**Estimated Effort to Fix:** 4-8 hours for Frontend Developer
+
+**Next Steps:**
+1. Frontend Developer must complete API integration (remove all TODOs)
+2. Create Dashboard and Admin pages (can be minimal for MVP)
+3. Add Logout button to layout/navigation
+4. Set up database with seed data
+5. Configure email service
+6. QA must re-test all Acceptance Criteria after fixes
+7. Security Testing must be performed with real API calls
+
+## Recommendation
+
+**DO NOT DEPLOY TO PRODUCTION** until all 6 critical bugs are fixed and full regression testing is completed.
+
+The backend implementation is solid and well-architected. The frontend UI is polished and user-friendly. However, the missing integration between frontend and backend makes the entire feature non-functional.
+
+**Positive Note:** Once the API integration is completed (which should be straightforward), the feature has a high likelihood of working correctly given the solid backend foundation.
+
+---
+
+**QA Testing Status:** BLOCKED - Waiting for Frontend-Backend Integration
+
+**Re-test Required After:** BUG-1, BUG-2, BUG-3, BUG-4, BUG-5, BUG-6 are fixed
+
+---
+
+## 🔧 Bug Fixes - Frontend Developer (2026-02-11)
+
+**Status:** ✅ ALL CRITICAL BUGS FIXED
+
+### Fixed Issues
+
+#### ✅ BUG-1 FIXED: Login-API connected
+- **File:** `src/app/login/page.tsx`
+- **Changes:**
+  - Removed TODO comments
+  - Implemented real API call to `/api/auth/login`
+  - Added proper error handling for network and authentication errors
+  - Implemented role-based redirect (Admin → `/admin`, Mitarbeiter → `/dashboard`)
+  - Using `window.location.href` for hard redirect (Auth Best Practice)
+
+#### ✅ BUG-2 FIXED: Password-Reset-API connected
+- **File:** `src/app/reset-password/page.tsx`
+- **Changes:**
+  - Removed TODO comments
+  - Implemented real API call to `/api/auth/reset-password`
+  - Added error handling for rate limiting and network errors
+  - Security: Same success message regardless of user existence
+
+#### ✅ BUG-3 FIXED: Password-Reset-Confirm-API connected
+- **File:** `src/app/reset-password/confirm/page.tsx`
+- **Changes:**
+  - Removed TODO comments
+  - Implemented real API call to `/api/auth/reset-password/confirm`
+  - Added error handling for expired/invalid tokens
+  - Proper loading state management
+
+#### ✅ BUG-4 FIXED: Logout-Button created
+- **New File:** `src/components/LogoutButton.tsx`
+- **Implementation:**
+  - Client component with loading state
+  - Calls `/api/auth/logout` API endpoint
+  - Hard redirect to `/login` after successful logout
+  - Integrated into Dashboard and Admin page headers
+  - Uses shadcn/ui Button component
+
+#### ✅ BUG-5 FIXED: Dashboard page created
+- **New File:** `src/app/dashboard/page.tsx`
+- **Implementation:**
+  - Mitarbeiter dashboard with auth check via `/api/auth/me`
+  - Auto-redirect to `/login` if not authenticated
+  - Displays user information (email, role)
+  - Includes Logout button in header
+  - Placeholder cards for future features (Zeiterfassung, etc.)
+  - Responsive design with HofZeit branding
+
+#### ✅ BUG-6 FIXED: Admin page created
+- **New File:** `src/app/admin/page.tsx`
+- **Implementation:**
+  - Admin portal with role-based access check
+  - Auto-redirect to `/dashboard` if user is not admin
+  - Auto-redirect to `/login` if not authenticated
+  - Admin badge in header
+  - Placeholder cards for future admin features (User Management, Settings)
+  - Responsive design with purple/indigo theme
+
+### Implementation Summary
+
+**Files Changed:**
+- ✏️ Modified: `src/app/login/page.tsx` (Lines 27-52)
+- ✏️ Modified: `src/app/reset-password/page.tsx` (Lines 24-46)
+- ✏️ Modified: `src/app/reset-password/confirm/page.tsx` (Lines 80-104)
+- ➕ Created: `src/components/LogoutButton.tsx`
+- ➕ Created: `src/app/dashboard/page.tsx`
+- ➕ Created: `src/app/admin/page.tsx`
+
+**Technical Implementation:**
+- All API calls use `fetch()` with proper error handling
+- Hard redirects use `window.location.href` (Best Practice for Auth)
+- Loading states prevent button spam
+- Error messages are user-friendly and secure
+- Auth checks on protected pages via `/api/auth/me`
+- Role-based access control implemented
+
+**Next Steps:**
+1. ✅ All critical bugs fixed
+2. ⏳ **READY FOR QA RE-TESTING**
+3. ⏳ Database setup with test users required
+4. ⏳ Email service configuration required (or mock for dev)
+
+**QA Engineer:** Please re-test all Acceptance Criteria. The feature should now be fully functional.

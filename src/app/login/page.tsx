@@ -25,26 +25,29 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // TODO: Implement actual login logic with API call
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password, rememberMe })
-      // })
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, rememberMe })
+      })
 
-      // Placeholder for now
-      console.log('Login attempt:', { email, password, rememberMe })
+      const data = await response.json()
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      if (!response.ok) {
+        setError(data.error || 'E-Mail oder Passwort falsch')
+        setIsLoading(false)
+        return
+      }
 
-      // TODO: Handle successful login - redirect based on user role
-      // if (userRole === 'admin') window.location.href = '/admin'
-      // else window.location.href = '/dashboard'
+      // Successful login - redirect based on user role
+      if (data.user?.role === 'admin') {
+        window.location.href = '/admin'
+      } else {
+        window.location.href = '/dashboard'
+      }
 
     } catch (err) {
-      setError('E-Mail oder Passwort falsch')
-    } finally {
+      setError('Keine Verbindung zum Server. Bitte prüfe deine Internet-Verbindung.')
       setIsLoading(false)
     }
   }

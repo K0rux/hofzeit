@@ -22,23 +22,26 @@ export default function ResetPasswordPage() {
     setIsLoading(true)
 
     try {
-      // TODO: Implement actual password reset request with API call
-      // const response = await fetch('/api/auth/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email })
-      // })
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
 
-      // Simulate API call
-      console.log('Password reset requested for:', email)
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Show generic error for rate limiting or server errors
+        setError(data.error || 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.')
+        setIsLoading(false)
+        return
+      }
 
       // Show success message (same message regardless if user exists - security)
       setIsSuccess(true)
 
     } catch (err) {
-      setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.')
-    } finally {
+      setError('Keine Verbindung zum Server. Bitte prüfe deine Internet-Verbindung.')
       setIsLoading(false)
     }
   }

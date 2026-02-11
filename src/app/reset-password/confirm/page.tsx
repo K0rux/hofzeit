@@ -78,16 +78,19 @@ function ResetPasswordConfirmContent() {
     setIsLoading(true)
 
     try {
-      // TODO: Implement actual password reset with API call
-      // const response = await fetch('/api/auth/reset-password/confirm', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token, password })
-      // })
+      const response = await fetch('/api/auth/reset-password/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      })
 
-      // Simulate API call
-      console.log('Password reset confirmed:', { token, password })
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Ein Fehler ist aufgetreten. Der Link ist möglicherweise abgelaufen.')
+        setIsLoading(false)
+        return
+      }
 
       // Show success and redirect after 3 seconds
       setIsSuccess(true)
@@ -96,8 +99,7 @@ function ResetPasswordConfirmContent() {
       }, 3000)
 
     } catch (err) {
-      setError('Ein Fehler ist aufgetreten. Der Link ist möglicherweise abgelaufen.')
-    } finally {
+      setError('Keine Verbindung zum Server. Bitte prüfe deine Internet-Verbindung.')
       setIsLoading(false)
     }
   }
