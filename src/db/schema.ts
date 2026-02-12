@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, pgEnum, integer } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 // Enums
@@ -10,11 +10,15 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  vacationDays: integer('vacation_days').notNull().default(30),
   role: roleEnum('role').notNull().default('mitarbeiter'),
   status: statusEnum('status').notNull().default('aktiv'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   lastLoginAt: timestamp('last_login_at'),
   passwordChangedAt: timestamp('password_changed_at'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
 // Password Reset Tokens Table

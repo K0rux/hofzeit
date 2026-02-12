@@ -17,12 +17,18 @@ async function seedTestUsers() {
     {
       email: 'mitarbeiter@hofzeit.app',
       password: 'test1234',
+      firstName: 'Max',
+      lastName: 'Mustermann',
+      vacationDays: 30,
       role: 'mitarbeiter' as const,
       status: 'aktiv' as const,
     },
     {
       email: 'admin@hofzeit.app',
       password: 'admin1234',
+      firstName: 'Admin',
+      lastName: 'User',
+      vacationDays: 30,
       role: 'admin' as const,
       status: 'aktiv' as const,
     },
@@ -48,6 +54,9 @@ async function seedTestUsers() {
     await db.insert(users).values({
       email: user.email,
       passwordHash,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      vacationDays: user.vacationDays,
       role: user.role,
       status: user.status,
     })
