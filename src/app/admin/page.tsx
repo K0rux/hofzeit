@@ -105,7 +105,10 @@ export default function AdminPage() {
         {/* Admin Dashboard Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* User Management Card */}
-          <Card className="border-purple-200 hover:shadow-lg transition-shadow">
+          <Card
+            className="border-purple-200 hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => router.push('/admin/users')}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-purple-600" />
@@ -115,7 +118,7 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Feature wird noch implementiert...
+                User anlegen, bearbeiten und deaktivieren
               </p>
             </CardContent>
           </Card>

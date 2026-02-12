@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { checkAdminRateLimit } from '@/lib/rate-limit'
 
 /**
  * Require admin role for API route
@@ -20,6 +21,18 @@ export async function requireAdmin() {
       error: NextResponse.json(
         { error: 'Nur Admins haben Zugriff auf diese Funktion' },
         { status: 403 }
+      ),
+      session: null,
+    }
+  }
+
+  // Rate limiting for admin operations (30 requests per minute per user)
+  const rateLimitResult = await checkAdminRateLimit(session.userId)
+  if (!rateLimitResult.success) {
+    return {
+      error: NextResponse.json(
+        { error: 'Zu viele Anfragen. Bitte versuche es in einer Minute erneut.' },
+        { status: 429 }
       ),
       session: null,
     }
@@ -68,7 +81,7 @@ export function transformUserToFrontend(dbUser: any) {
     role: mapRoleToFrontend(dbUser.role),
     status: mapStatusToFrontend(dbUser.status),
     vacationDays: dbUser.vacationDays,
-    createdAt: dbUser.createdAt.toISOString(),
-    updatedAt: dbUser.updatedAt.toISOString(),
+    createdAt: dbUser.createdAt?.toISOString() || new Date().toISOString(),
+    updatedAt: dbUser.updatedAt?.toISOString() || new Date().toISOString(),
   }
 }

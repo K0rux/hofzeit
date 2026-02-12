@@ -43,6 +43,7 @@ class InMemoryRateLimiter {
 // Create rate limiter instances
 let loginRateLimiter: Ratelimit | InMemoryRateLimiter
 let passwordResetRateLimiter: Ratelimit | InMemoryRateLimiter
+let adminOperationsRateLimiter: Ratelimit | InMemoryRateLimiter
 
 // Initialize rate limiters
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
@@ -63,11 +64,18 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
     limiter: Ratelimit.slidingWindow(3, '15 m'), // 3 requests per 15 minutes
     analytics: true,
   })
+
+  adminOperationsRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1 m'), // 30 requests per minute
+    analytics: true,
+  })
 } else {
   // Use in-memory cache for development
   console.warn('⚠️ Using in-memory rate limiting (not recommended for production)')
   loginRateLimiter = new InMemoryRateLimiter()
   passwordResetRateLimiter = new InMemoryRateLimiter()
+  adminOperationsRateLimiter = new InMemoryRateLimiter()
 }
 
 /**
@@ -88,6 +96,16 @@ export async function checkPasswordResetRateLimit(email: string) {
     return passwordResetRateLimiter.limit(email, 3, 15 * 60) // 3 per 15 minutes
   }
   return passwordResetRateLimiter.limit(email)
+}
+
+/**
+ * Check admin operations rate limit (30 attempts per minute per user)
+ */
+export async function checkAdminRateLimit(userId: string) {
+  if (adminOperationsRateLimiter instanceof InMemoryRateLimiter) {
+    return adminOperationsRateLimiter.limit(userId, 30, 60) // 30 per 60 seconds
+  }
+  return adminOperationsRateLimiter.limit(userId)
 }
 
 /**

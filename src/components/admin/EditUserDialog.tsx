@@ -65,14 +65,28 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
     setIsLoading(true)
 
     // Client-side validation
-    if (formData.password && formData.password.length < 8) {
-      setError('Passwort muss mindestens 8 Zeichen lang sein')
+    if (formData.firstName.length < 2) {
+      setError('Vorname muss mindestens 2 Zeichen lang sein')
       setIsLoading(false)
       return
     }
 
-    if (!formData.email.includes('@')) {
+    if (formData.lastName.length < 2) {
+      setError('Nachname muss mindestens 2 Zeichen lang sein')
+      setIsLoading(false)
+      return
+    }
+
+    // Better email validation (simple but effective regex)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
       setError('Bitte gib eine gültige E-Mail-Adresse ein')
+      setIsLoading(false)
+      return
+    }
+
+    if (formData.password && formData.password.length < 8) {
+      setError('Passwort muss mindestens 8 Zeichen lang sein')
       setIsLoading(false)
       return
     }

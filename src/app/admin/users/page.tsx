@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Loader2, UserCircle2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, Search, Loader2, UserCircle2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -29,6 +30,8 @@ export type User = {
 }
 
 export default function AdminUsersPage() {
+  const router = useRouter()
+  const [isAuthorized, setIsAuthorized] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -38,10 +41,41 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
-  // Fetch users
+  // Check if user is admin
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+
+        if (!response.ok) {
+          router.push('/login')
+          return
+        }
+
+        const data = await response.json()
+
+        // Check if user is admin
+        if (data.user?.role !== 'admin') {
+          router.push('/dashboard')
+          return
+        }
+
+        setIsAuthorized(true)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        router.push('/login')
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  // Fetch users (only when authorized)
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchUsers()
+    }
+  }, [isAuthorized])
 
   const fetchUsers = async () => {
     setIsLoading(true)
@@ -97,9 +131,28 @@ export default function AdminUsersPage() {
     fetchUsers()
   }
 
+  // Show loading while checking authorization
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto p-4 md:p-8 space-y-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/admin')}
+          className="mb-2"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Zurück zum Admin-Portal
+        </Button>
+
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

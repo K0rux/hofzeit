@@ -30,14 +30,16 @@ export function ConfirmDeactivateDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Mitarbeiter deaktivieren?</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              Möchtest du <strong>{user.firstName} {user.lastName}</strong> wirklich deaktivieren?
-            </p>
-            <p className="text-sm">
-              Der Login wird gesperrt, aber alle Daten bleiben erhalten. Der Account kann später
-              wieder aktiviert werden.
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              <div>
+                Möchtest du <strong>{user.firstName} {user.lastName}</strong> wirklich deaktivieren?
+              </div>
+              <div className="text-sm">
+                Der Login wird gesperrt, aber alle Daten bleiben erhalten. Der Account kann später
+                wieder aktiviert werden.
+              </div>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
