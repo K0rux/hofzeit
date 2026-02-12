@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Loader2, Shield, Users, Clock, Settings } from 'lucide-react'
+import { Loader2, Shield, Users, Clock, Settings, Briefcase, Building2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LogoutButton } from '@/components/LogoutButton'
 import { Badge } from '@/components/ui/badge'
@@ -119,6 +119,44 @@ export default function AdminPage() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 User anlegen, bearbeiten und deaktivieren
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Activities Management Card */}
+          <Card
+            className="border-purple-200 hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => router.push('/admin/activities')}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-purple-600" />
+                Tätigkeiten
+              </CardTitle>
+              <CardDescription>Tätigkeiten-Stammdaten verwalten</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Tätigkeiten für Zeiterfassungen anlegen und bearbeiten
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Cost Centers Management Card */}
+          <Card
+            className="border-purple-200 hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => router.push('/admin/cost-centers')}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-purple-600" />
+                Kostenstellen
+              </CardTitle>
+              <CardDescription>Kostenstellen-Stammdaten verwalten</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Kostenstellen für Zeiterfassungen anlegen und bearbeiten
               </p>
             </CardContent>
           </Card>
