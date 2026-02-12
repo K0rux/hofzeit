@@ -42,6 +42,25 @@ export const loginAttempts = pgTable('login_attempts', {
   successful: boolean('successful').notNull(),
 })
 
+// Activities Table (PROJ-3)
+export const activities = pgTable('activities', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+// Cost Centers Table (PROJ-3)
+export const costCenters = pgTable('cost_centers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  number: text('number'),
+  description: text('description'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
 // TypeScript Types (exported for use in API routes)
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
@@ -49,3 +68,7 @@ export type PasswordResetToken = typeof passwordResetTokens.$inferSelect
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert
 export type LoginAttempt = typeof loginAttempts.$inferSelect
 export type NewLoginAttempt = typeof loginAttempts.$inferInsert
+export type Activity = typeof activities.$inferSelect
+export type NewActivity = typeof activities.$inferInsert
+export type CostCenter = typeof costCenters.$inferSelect
+export type NewCostCenter = typeof costCenters.$inferInsert
