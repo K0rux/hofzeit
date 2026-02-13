@@ -30,13 +30,15 @@ export function CreateActivityDialog({
 }: CreateActivityDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
+  const [duplicateName, setDuplicateName] = useState('')
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, allowDuplicate = false) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
@@ -67,10 +69,19 @@ export function CreateActivityDialog({
         body: JSON.stringify({
           name: formData.name.trim(),
           description: formData.description.trim() || null,
+          allowDuplicate,
         }),
       })
 
       const data = await response.json()
+
+      // Handle duplicate name (409 Conflict)
+      if (response.status === 409 && data.error === 'duplicate') {
+        setDuplicateName(data.existingName || formData.name)
+        setShowDuplicateWarning(true)
+        setIsLoading(false)
+        return
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Fehler beim Erstellen der Tätigkeit')
@@ -80,12 +91,18 @@ export function CreateActivityDialog({
 
       // Reset form
       setFormData({ name: '', description: '' })
+      setShowDuplicateWarning(false)
       onActivityCreated()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Erstellen')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleConfirmDuplicate = (e: React.FormEvent) => {
+    setShowDuplicateWarning(false)
+    handleSubmit(e, true)
   }
 
   return (
@@ -104,6 +121,41 @@ export function CreateActivityDialog({
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Duplicate Warning */}
+            {showDuplicateWarning && (
+              <Alert variant="default" className="border-orange-500 bg-orange-50">
+                <AlertDescription className="space-y-2">
+                  <p className="font-medium text-orange-900">
+                    Eine Tätigkeit mit dem Namen "{duplicateName}" existiert bereits.
+                  </p>
+                  <p className="text-sm text-orange-800">
+                    Möchtest du trotzdem eine weitere Tätigkeit mit diesem Namen erstellen?
+                  </p>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setShowDuplicateWarning(false)
+                        setError('')
+                      }}
+                    >
+                      Abbrechen
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleConfirmDuplicate}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      Ja, trotzdem erstellen
+                    </Button>
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
 

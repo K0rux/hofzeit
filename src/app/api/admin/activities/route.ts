@@ -12,8 +12,9 @@ const createActivitySchema = z.object({
     .max(100, 'Name darf maximal 100 Zeichen lang sein'),
   description: z.string()
     .max(500, 'Beschreibung darf maximal 500 Zeichen lang sein')
-    .optional()
-    .default(''),
+    .nullable()
+    .optional(),
+  allowDuplicate: z.boolean().optional().default(false),
 })
 
 /**
@@ -78,7 +79,27 @@ export async function POST(request: Request) {
       )
     }
 
-    const { name, description } = validationResult.data
+    const { name, description, allowDuplicate } = validationResult.data
+
+    // Check for duplicate name (unless explicitly allowed)
+    if (!allowDuplicate) {
+      const [existing] = await db
+        .select()
+        .from(activities)
+        .where(ilike(activities.name, name))
+        .limit(1)
+
+      if (existing) {
+        return NextResponse.json(
+          {
+            error: 'duplicate',
+            message: `Eine Tätigkeit mit dem Namen "${name}" existiert bereits.`,
+            existingName: existing.name,
+          },
+          { status: 409 }
+        )
+      }
+    }
 
     const [newActivity] = await db
       .insert(activities)

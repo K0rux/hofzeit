@@ -13,6 +13,7 @@ const updateActivitySchema = z.object({
     .optional(),
   description: z.string()
     .max(500, 'Beschreibung darf maximal 500 Zeichen lang sein')
+    .nullable()
     .optional(),
 })
 

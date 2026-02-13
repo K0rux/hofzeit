@@ -13,9 +13,11 @@ const updateCostCenterSchema = z.object({
     .optional(),
   number: z.string()
     .max(20, 'Nummer darf maximal 20 Zeichen lang sein')
+    .nullable()
     .optional(),
   description: z.string()
     .max(500, 'Beschreibung darf maximal 500 Zeichen lang sein')
+    .nullable()
     .optional(),
 })
 

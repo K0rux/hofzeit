@@ -12,12 +12,13 @@ const createCostCenterSchema = z.object({
     .max(100, 'Name darf maximal 100 Zeichen lang sein'),
   number: z.string()
     .max(20, 'Nummer darf maximal 20 Zeichen lang sein')
-    .optional()
-    .default(''),
+    .nullable()
+    .optional(),
   description: z.string()
     .max(500, 'Beschreibung darf maximal 500 Zeichen lang sein')
-    .optional()
-    .default(''),
+    .nullable()
+    .optional(),
+  allowDuplicate: z.boolean().optional().default(false),
 })
 
 /**
@@ -83,7 +84,50 @@ export async function POST(request: Request) {
       )
     }
 
-    const { name, number, description } = validationResult.data
+    const { name, number, description, allowDuplicate } = validationResult.data
+
+    // Check for duplicate name or number (unless explicitly allowed)
+    if (!allowDuplicate) {
+      // Check duplicate name
+      const [existingName] = await db
+        .select()
+        .from(costCenters)
+        .where(ilike(costCenters.name, name))
+        .limit(1)
+
+      if (existingName) {
+        return NextResponse.json(
+          {
+            error: 'duplicate',
+            message: `Eine Kostenstelle mit dem Namen "${name}" existiert bereits.`,
+            existingName: existingName.name,
+            duplicateField: 'name',
+          },
+          { status: 409 }
+        )
+      }
+
+      // Check duplicate number (only if number is provided)
+      if (number && number.trim().length > 0) {
+        const [existingNumber] = await db
+          .select()
+          .from(costCenters)
+          .where(ilike(costCenters.number, number))
+          .limit(1)
+
+        if (existingNumber) {
+          return NextResponse.json(
+            {
+              error: 'duplicate',
+              message: `Eine Kostenstelle mit der Nummer "${number}" existiert bereits.`,
+              existingNumber: existingNumber.number,
+              duplicateField: 'number',
+            },
+            { status: 409 }
+          )
+        }
+      }
+    }
 
     const [newCostCenter] = await db
       .insert(costCenters)
