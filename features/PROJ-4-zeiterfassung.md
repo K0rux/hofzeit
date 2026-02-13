@@ -149,3 +149,117 @@ Mitarbeiter können ihre täglichen Arbeitszeiten erfassen. Eine Zeiterfassung b
 - Kalender-Ansicht kann mit einer Library wie `react-big-calendar` oder `fullcalendar` realisiert werden
 - Dezimal-Format für Stunden ist wichtig (nicht HH:MM)
 - Soft Delete für Zeiterfassungen (falls Admin-Wiederherstellung später gewünscht)
+
+---
+
+## Tech-Design (Solution Architect)
+
+### Component-Struktur
+
+```
+Zeiterfassung-Seite (/dashboard/zeiterfassung)
+├── Header-Bereich
+│   ├── Monat-Wechsler (Dropdown: aktueller Monat, letzte 3 Monate)
+│   └── Monats-Summe Anzeige (z.B. "Summe: 145.5h")
+│
+├── "Neue Zeiterfassung" Button (Quick-Add, prominent platziert)
+│
+├── Zeiterfassungs-Übersicht
+│   ├── Gruppierung nach Datum (neueste zuerst)
+│   ├── Pro Datum:
+│   │   ├── Datum-Header (z.B. "5. Februar 2026, Mittwoch")
+│   │   ├── Zeiterfassungs-Karten
+│   │   │   ├── Tätigkeit-Name
+│   │   │   ├── Kostenstelle-Name
+│   │   │   ├── Stunden (Dezimal, z.B. "8.5h")
+│   │   │   ├── Notiz (falls vorhanden)
+│   │   │   └── Aktionen (Bearbeiten, Löschen) - nur bei offenen Monaten
+│   │   └── Tages-Summe (z.B. "Gesamt: 12.5h")
+│   └── Leere-Tage-Hinweis (z.B. "5 Tage ohne Erfassung")
+│
+└── Neue Zeiterfassung Dialog (Modal)
+    └── Formular
+        ├── Datum-Feld (Date-Picker, Standardwert: heute)
+        ├── Tätigkeit (Dropdown, alphabetisch sortiert)
+        ├── Kostenstelle (Dropdown, alphabetisch sortiert)
+        ├── Stunden (Number Input, Dezimal-Format)
+        ├── Notiz (Textarea, optional)
+        └── Aktionen (Abbrechen, Speichern)
+```
+
+### Daten-Model
+
+**Zeiterfassung (Time Entry):**
+- Eindeutige ID (automatisch generiert)
+- Mitarbeiter (Referenz zum eingeloggten User)
+- Datum (Tag im Monat)
+- Tätigkeit (Referenz zu Activities-Tabelle)
+- Kostenstelle (Referenz zu Cost Centers-Tabelle)
+- Stunden (Dezimal-Format: 8.5 = 8 Stunden 30 Minuten)
+- Notiz (optional, max. 500 Zeichen)
+- Erstellt am / Aktualisiert am (Zeitstempel)
+
+**Gespeichert in:** PostgreSQL Datenbank (neue Tabelle: `time_entries`)
+
+**Wichtige Details:**
+- Ein Mitarbeiter kann mehrere Einträge pro Tag haben (z.B. verschiedene Tätigkeiten)
+- Nur Daten im aktuellen Monat sind editierbar (abgeschlossene Monate = read-only)
+- Stunden werden als Dezimalzahl gespeichert (z.B. 0.25 = 15 Min, 8.5 = 8h 30min)
+
+### Tech-Entscheidungen
+
+**Warum Date-Picker Library (react-day-picker)?**
+→ Touch-optimiert, zugänglich, unterstützt Monats-Einschränkungen
+→ Visuelle Markierung von Wochenenden/Feiertagen möglich
+→ Mobile-freundlich (große Touch-Targets)
+
+**Warum Dezimal-Format statt HH:MM?**
+→ Einfacher für Berechnung & Export
+→ Weniger fehleranfällig (keine Umrechnung 8:30 → 8.5 nötig)
+→ Standard in vielen Zeiterfassungs-Systemen
+
+**Warum Gruppierung nach Datum (statt Kalender-Grid)?**
+→ Übersichtlicher auf Mobile (kein Scrollen zwischen Wochen)
+→ Schneller Überblick über mehrere Einträge pro Tag
+→ Besser für viele Einträge (100+) geeignet
+
+**Warum separate Tabelle für Zeiterfassungen?**
+→ Skaliert besser (1000+ Einträge pro Mitarbeiter/Jahr)
+→ Ermöglicht spätere Features (Monatsabschluss PROJ-6, PDF Export PROJ-8)
+→ Trennung von Stammdaten (Users, Activities, Cost Centers)
+
+**Warum Modal-Dialog statt Inline-Formular?**
+→ Weniger ablenkend (Fokus auf Eingabe)
+→ Mobile-optimiert (Fullscreen auf kleinen Bildschirmen)
+→ Konsistent mit bestehenden Admin-Dialogen
+
+### Dependencies
+
+**Benötigte Packages:**
+- `react-day-picker` - Moderner Date-Picker (touch-optimiert, zugänglich)
+- `date-fns` - Datum-Formatierung & -Berechnungen (z.B. "ist Datum im aktuellen Monat?")
+
+**Bereits vorhanden (Wiederverwendung):**
+- shadcn/ui Komponenten (Dialog, Form, Input, Select, Textarea)
+- Supabase PostgreSQL Datenbank
+- Bestehende APIs für Activities & Cost Centers (`/api/activities`, `/api/cost-centers`)
+
+### Datenbank-Änderungen
+
+**Neue Tabelle: `time_entries`**
+- Felder: id, user_id, date, activity_id, cost_center_id, hours, notes, created_at, updated_at
+- Foreign Keys: user_id → users, activity_id → activities, cost_center_id → cost_centers
+- Index: (user_id, date) für schnelle Monats-Abfragen
+- Validierung: hours zwischen 0.25 und 24
+
+### API-Struktur
+
+**Neue Endpoints:**
+- `POST /api/time-entries` - Zeiterfassung erstellen
+- `GET /api/time-entries?month=2026-02` - Zeiterfassungen für Monat abrufen
+- `PATCH /api/time-entries/[id]` - Zeiterfassung bearbeiten
+- `DELETE /api/time-entries/[id]` - Zeiterfassung löschen
+
+**Wiederverwendung:**
+- `GET /api/activities` - Aktive Tätigkeiten abrufen (bereits vorhanden!)
+- `GET /api/cost-centers` - Aktive Kostenstellen abrufen (bereits vorhanden!)

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, pgEnum, integer } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, pgEnum, integer, date, real } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 // Enums
@@ -61,6 +61,25 @@ export const costCenters = pgTable('cost_centers', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
+// Time Entries Table (PROJ-4)
+export const timeEntries = pgTable('time_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  date: date('date').notNull(),
+  activityId: uuid('activity_id')
+    .notNull()
+    .references(() => activities.id, { onDelete: 'restrict' }),
+  costCenterId: uuid('cost_center_id')
+    .notNull()
+    .references(() => costCenters.id, { onDelete: 'restrict' }),
+  hours: real('hours').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
 // TypeScript Types (exported for use in API routes)
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
@@ -72,3 +91,5 @@ export type Activity = typeof activities.$inferSelect
 export type NewActivity = typeof activities.$inferInsert
 export type CostCenter = typeof costCenters.$inferSelect
 export type NewCostCenter = typeof costCenters.$inferInsert
+export type TimeEntry = typeof timeEntries.$inferSelect
+export type NewTimeEntry = typeof timeEntries.$inferInsert

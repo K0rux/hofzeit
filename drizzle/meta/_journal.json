@@ -15,6 +15,13 @@
       "when": 1770908111927,
       "tag": "0001_graceful_doctor_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770966962899,
+      "tag": "0002_giant_loa",
+      "breakpoints": true
     }
   ]
 }
