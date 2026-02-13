@@ -1,6 +1,17 @@
 # PROJ-4: Zeiterfassung erstellen
 
-## Status: 🔵 Planned
+## Status: 🟡 In Progress (Frontend ✅ | Backend ⏳)
+
+**Frontend-Implementation abgeschlossen:**
+- ✅ Zeiterfassung Page (`/dashboard/zeiterfassung`)
+- ✅ Create/Edit/Delete Dialoge
+- ✅ Zeiterfassungs-Übersicht (gruppiert nach Datum)
+- ✅ Navigation vom Dashboard zur Zeiterfassung
+- ✅ Mobile-optimiert & responsive
+
+**Backend noch ausstehend:**
+- ⏳ API Endpoints (`/api/time-entries`)
+- ⏳ Datenbank-Tabelle (`time_entries`)
 
 ## Überblick
 Mitarbeiter können ihre täglichen Arbeitszeiten erfassen. Eine Zeiterfassung besteht aus Datum, Tätigkeit, Kostenstelle und geleisteten Stunden.

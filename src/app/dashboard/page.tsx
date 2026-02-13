@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Loader2, Clock, User } from 'lucide-react'
+import { Loader2, Clock, User, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { LogoutButton } from '@/components/LogoutButton'
 
 interface User {
@@ -110,8 +111,8 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Zeiterfassung Card (Placeholder) */}
-          <Card>
+          {/* Zeiterfassung Card */}
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
@@ -119,10 +120,17 @@ export default function DashboardPage() {
               </CardTitle>
               <CardDescription>Deine Arbeitszeiten</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Feature wird noch implementiert...
+                Erfasse und verwalte deine täglichen Arbeitszeiten
               </p>
+              <Button
+                onClick={() => router.push('/dashboard/zeiterfassung')}
+                className="w-full"
+              >
+                Zur Zeiterfassung
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </CardContent>
           </Card>
 
