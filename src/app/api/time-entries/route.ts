@@ -13,7 +13,7 @@ const TimeEntrySchema = z.object({
   activityId: z.string().uuid('Ungültige Tätigkeits-ID'),
   costCenterId: z.string().uuid('Ungültige Kostenstellen-ID'),
   hours: z.number().min(0.25, 'Mindestens 0.25 Stunden erforderlich').max(24, 'Maximal 24 Stunden erlaubt'),
-  notes: z.string().max(500, 'Notiz darf maximal 500 Zeichen lang sein').optional(),
+  notes: z.string().max(500, 'Notiz darf maximal 500 Zeichen lang sein').nullish(),
 })
 
 /**

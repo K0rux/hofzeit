@@ -107,7 +107,7 @@ export default function ZeiterfassungPage() {
         throw new Error('Fehler beim Laden der Zeiterfassungen')
       }
       const data = await response.json()
-      setTimeEntries(data.timeEntries || [])
+      setTimeEntries(data.entries || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden')
     } finally {
