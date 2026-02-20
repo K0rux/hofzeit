@@ -1,6 +1,6 @@
 # PROJ-2: Benutzerverwaltung (Admin)
 
-## Status: Planned
+## Status: In Review
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20
 
@@ -44,7 +44,78 @@ Administratoren können im Admin-Bereich neue Benutzerkonten anlegen, bestehende
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Komponentenstruktur
+
+```
+/admin  (geschützt – nur Admin-Rolle)
+└── AdminPage
+    ├── Seitentitel "Benutzerverwaltung"
+    ├── "Neuer Benutzer"-Button → öffnet NeuerBenutzerDialog
+    ├── BenutzerTabelle
+    │   ├── Kopfzeile: Name | E-Mail | Rolle | Status | Aktionen
+    │   └── BenutzerZeile (pro Nutzer)
+    │       ├── Name (Vorname + Nachname)
+    │       ├── E-Mail
+    │       ├── Rollen-Badge  (Admin / Mitarbeiter)
+    │       ├── Status-Badge  (Aktiv / Inaktiv)
+    │       └── Aktionen-Dropdown
+    │           ├── Passwort zurücksetzen  → PasswortResetDialog
+    │           ├── Rolle ändern           → RolleÄndernDialog
+    │           └── Benutzer deaktivieren  → DeaktivierenDialog
+    └── Dialoge (modale Fenster, jeweils mit Abbrechen-Option)
+        ├── NeuerBenutzerDialog
+        │   └── Felder: Vorname, Nachname, E-Mail, Passwort, Rolle
+        ├── PasswortResetDialog
+        │   └── Felder: Neues Passwort, Passwort bestätigen
+        ├── RolleÄndernDialog
+        │   └── Feld: Neue Rolle auswählen (Dropdown)
+        └── DeaktivierenDialog
+            └── Warnmeldung (Zeitdaten bleiben erhalten)
+```
+
+### Datenspeicherung
+
+**Neue Datenbanktabelle: `profiles`**
+
+Ergänzt die von Supabase verwaltete Auth-Tabelle mit anwendungsspezifischen Daten:
+
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | UUID (PK) | Identisch mit der Supabase Auth User-ID |
+| first_name | Text | Vorname |
+| last_name | Text | Nachname |
+| role | Text | `'admin'` oder `'employee'` |
+| is_active | Boolean | `true` = aktiv, `false` = deaktiviert (Soft-Delete) |
+| created_at | Timestamp | Anlagezeitpunkt |
+| updated_at | Timestamp | Letzter Änderungszeitpunkt |
+
+**Keine separate Passwort-Speicherung** – Passwörter werden ausschließlich von Supabase Auth verwaltet (bcrypt-Hash).
+
+### Seitenstruktur
+
+| Route | Sichtbarkeit | Beschreibung |
+|-------|-------------|--------------|
+| `/admin` | Nur Admin-Rolle | Benutzerverwaltung |
+| `/api/admin/users` | Nur Admin-Rolle (server) | Benutzer anlegen & auflisten |
+| `/api/admin/users/[id]/password` | Nur Admin-Rolle (server) | Passwort zurücksetzen |
+| `/api/admin/users/[id]/role` | Nur Admin-Rolle (server) | Rolle ändern |
+| `/api/admin/users/[id]` | Nur Admin-Rolle (server) | Benutzer deaktivieren |
+
+### Technische Entscheidungen
+
+| Entscheidung | Warum |
+|---|---|
+| **`profiles`-Tabelle** für Rollen & Namen | Supabase Auth (`auth.users`) lässt sich nicht direkt um eigene Felder erweitern. Eine eigene Tabelle gibt uns volle Kontrolle. |
+| **Supabase Admin API** (Service-Role-Key) für User-Verwaltung | Nur der Server-seitige Admin-Schlüssel darf Auth-Nutzer anlegen, Passwörter ändern und Konten löschen. Läuft ausschließlich in API-Routen – nie im Browser. |
+| **Soft-Delete** (`is_active = false`) statt hartem Löschen | DSGVO-Konformität: Zeiteinträge eines Mitarbeiters müssen erhalten bleiben. Benutzer wird gesperrt, nicht gelöscht. |
+| **Rollenprüfung in API-Routen** (server-seitig) | Client-seitiger Schutz allein ist unsicher. Jede API-Route liest die Rolle aus der `profiles`-Tabelle und verweigert bei Nicht-Admin den Zugriff. |
+| **Erweiterung des Proxy (Routenwächter)** für `/admin` | Der bestehende `src/proxy.ts` wird ergänzt: Bei `/admin/*`-Routen wird zusätzlich zur Login-Prüfung die Admin-Rolle geprüft. Nicht-Admins werden zu `/dashboard` weitergeleitet. |
+| **Shadcn/ui Table + Dialog** | Bereits installierte Komponenten werden verwendet – kein Custom-Code nötig. |
+
+### Neue Pakete
+
+Keine – Supabase JS ist bereits installiert und unterstützt die Admin API über den Service-Role-Key.
 
 ## QA Test Results
 _To be added by /qa_
