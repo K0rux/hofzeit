@@ -3,7 +3,7 @@ name: backend
 description: Build APIs, database schemas, and server-side logic with Supabase. Use after frontend is built.
 argument-hint: [feature-spec-path]
 user-invocable: true
-context: fork
+#context: fork
 agent: Backend Developer
 model: opus
 ---

@@ -1,28 +1,56 @@
 # Product Requirements Document
 
 ## Vision
-_Describe what you are building and why._
+Hofzeit ist ein webbasiertes Zeiterfassungssystem für kommunale Bauhöfe (1–20 Mitarbeiter). Es ermöglicht Mitarbeitern, ihre Arbeitszeiten strukturiert nach Tätigkeiten und Kostenstellen zu erfassen, Abwesenheiten (Urlaub, Krankheit) einzutragen und Auswertungen als PDF zu exportieren. Damit ersetzt Hofzeit papierbasierte Zeiterfassung durch eine einfache, mobile-freundliche Lösung.
 
 ## Target Users
-_Who will use this product? Describe their needs and pain points._
+
+### Mitarbeiter (Employee)
+- Mitarbeiter eines kommunalen Bauhofs (Ortspflege, Grünflächenpflege, Straßenunterhalt)
+- Nutzen hauptsächlich iPhone/Smartphone im Außeneinsatz
+- Wollen schnell und unkompliziert Zeiten auf Tätigkeiten und Kostenstellen buchen
+- Brauchen eine einfache Möglichkeit, Urlaub und Krankheit zu melden
+- Möchten ihre Monatsübersicht als PDF exportieren
+
+### Administrator (Admin)
+- Führungskraft oder Verwaltungsmitarbeiter des Bauhofs
+- Legt Benutzerkonten an, verwaltet und löscht sie
+- Setzt Passwörter zurück bei Bedarf
+- Hat Überblick über alle Nutzer des Systems
 
 ## Core Features (Roadmap)
 
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 (MVP) | _Feature 1_ | Planned |
-| P0 (MVP) | _Feature 2_ | Planned |
-| P1 | _Feature 3_ | Planned |
-| P2 | _Feature 4_ | Planned |
+| P0 (MVP) | PROJ-1: Benutzerauthentifizierung | Planned |
+| P0 (MVP) | PROJ-2: Benutzerverwaltung (Admin) | Planned |
+| P0 (MVP) | PROJ-3: Tätigkeiten & Kostenstellen verwalten | Planned |
+| P0 (MVP) | PROJ-4: Zeiterfassung | Planned |
+| P1 | PROJ-5: Abwesenheitsverwaltung (Urlaub & Krankheit) | Planned |
+| P1 | PROJ-6: PDF-Export | Planned |
 
 ## Success Metrics
-_How will you measure success? (e.g., user signups, retention, task completion rate)_
+- Alle Mitarbeiter des Bauhofs können sich selbstständig einloggen und Zeiten erfassen
+- Zeiterfassung dauert unter 60 Sekunden pro Eintrag
+- PDF-Export ist fehlerfrei und vollständig
+- Keine Datenverluste (DSGVO-konformer Betrieb)
+- App funktioniert zuverlässig auf iPhone (PWA)
 
 ## Constraints
-_Budget, timeline, technical limitations, team size._
+- **Budget:** Klein – Open-Source-Stack (Next.js, Supabase Free Tier)
+- **Team:** Kleines Entwicklungsteam / Einzelperson
+- **Nutzerzahl:** 1–20 gleichzeitige Nutzer
+- **Geräte:** Primär iPhone (Safari), PWA-fähig
+- **Datenschutz:** DSGVO-konform (Daten verbleiben in EU, keine unnötige Datenweitergabe)
+- **Sprache:** Deutsch (UI und Inhalte)
 
 ## Non-Goals
-_What are you explicitly NOT building in this version?_
+- Keine Lohnabrechnung oder Gehaltsberechnung
+- Kein Projektmanagement (Gantt-Charts, Aufgaben, Deadlines)
+- Keine GPS-/Standortverfolgung der Mitarbeiter
+- Kein automatischer Stempeluhr-Modus (Start/Stop in Echtzeit)
+- Keine Integration mit externen Lohnsystemen (SAP, DATEV) in v1
+- Kein Dark Mode in MVP
 
 ---
 

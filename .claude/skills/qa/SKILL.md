@@ -3,7 +3,7 @@ name: qa
 description: Test features against acceptance criteria, find bugs, and perform security audit. Use after implementation is done.
 argument-hint: [feature-spec-path]
 user-invocable: true
-context: fork
+#context: fork
 agent: QA Engineer
 model: opus
 ---
