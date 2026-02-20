@@ -1,6 +1,6 @@
 # PROJ-1: Benutzerauthentifizierung
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20 (all QA bugs fixed, ready for /deploy)
 
@@ -265,4 +265,8 @@ Keine – Supabase-JS ist bereits im Stack enthalten.
 | BUG-6: Unbenutzter `useRouter` Import | ✅ Fixed | Import und Variable entfernt |
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-20
+**Production URL:** https://hofzeit.vercel.app/
+**Platform:** Vercel (auto-deploy from `main` branch)
+**Git Tag:** v1.0.0-PROJ-1
