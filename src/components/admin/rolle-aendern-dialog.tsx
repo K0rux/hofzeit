@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -81,6 +82,7 @@ export function RolleAendernDialog({
 
       resetForm()
       onOpenChange(false)
+      toast.success('Rolle erfolgreich geändert')
       onSuccess()
     } catch {
       setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')

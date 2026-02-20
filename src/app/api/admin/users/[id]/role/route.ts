@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { verifyAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase-admin'
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const roleSchema = z.object({
   role: z.enum(['admin', 'employee']),
 })
@@ -16,6 +18,10 @@ export async function PUT(
   if ('error' in auth) return auth.error
 
   const { id } = await params
+
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json({ error: 'Ungültige Benutzer-ID' }, { status: 400 })
+  }
 
   // Prevent changing own role
   if (id === auth.userId) {

@@ -13,51 +13,41 @@ import {
 } from '@/components/ui/dialog'
 import type { UserProfile } from './types'
 
-interface DeaktivierenDialogProps {
+interface AktivierenDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   user: UserProfile | null
-  currentUserId: string | null
   onSuccess: () => void
 }
 
-export function DeaktivierenDialog({
+export function AktivierenDialog({
   open,
   onOpenChange,
   user,
-  currentUserId,
   onSuccess,
-}: DeaktivierenDialogProps) {
+}: AktivierenDialogProps) {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const isSelf = user?.id === currentUserId
-
-  async function handleDeactivate() {
+  async function handleActivate() {
     setError(null)
-
     if (!user) return
-
-    if (isSelf) {
-      setError('Sie können sich nicht selbst deaktivieren')
-      return
-    }
 
     setSubmitting(true)
     try {
       const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'DELETE',
+        method: 'PATCH',
       })
 
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'Fehler beim Deaktivieren des Benutzers')
+        setError(data.error || 'Fehler beim Reaktivieren des Benutzers')
         return
       }
 
       setError(null)
       onOpenChange(false)
-      toast.success('Benutzer erfolgreich deaktiviert')
+      toast.success('Benutzer erfolgreich reaktiviert')
       onSuccess()
     } catch {
       setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
@@ -70,24 +60,17 @@ export function DeaktivierenDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Benutzer deaktivieren</DialogTitle>
+          <DialogTitle>Benutzer reaktivieren</DialogTitle>
           <DialogDescription>
-            Möchten Sie {user?.first_name} {user?.last_name} wirklich
-            deaktivieren?
+            Möchten Sie {user?.first_name} {user?.last_name} wieder aktivieren?
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
-            <p className="text-sm text-amber-800">
-              Der Benutzer kann sich nicht mehr einloggen. Bestehende
-              Zeiteinträge bleiben erhalten.
+          <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+            <p className="text-sm text-blue-800">
+              Der Benutzer kann sich nach der Reaktivierung wieder einloggen.
             </p>
           </div>
-          {isSelf && (
-            <p className="text-sm text-destructive">
-              Sie können sich nicht selbst deaktivieren.
-            </p>
-          )}
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
@@ -101,15 +84,9 @@ export function DeaktivierenDialog({
           >
             Abbrechen
           </Button>
-          {!isSelf && (
-            <Button
-              variant="destructive"
-              onClick={handleDeactivate}
-              disabled={submitting}
-            >
-              {submitting ? 'Wird deaktiviert...' : 'Deaktivieren'}
-            </Button>
-          )}
+          <Button onClick={handleActivate} disabled={submitting}>
+            {submitting ? 'Wird aktiviert...' : 'Reaktivieren'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

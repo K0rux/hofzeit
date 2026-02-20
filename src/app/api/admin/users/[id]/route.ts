@@ -2,6 +2,52 @@ import { NextResponse } from 'next/server'
 import { verifyAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase-admin'
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// PATCH /api/admin/users/[id] – Reactivate a deactivated user
+export async function PATCH(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await verifyAdmin()
+  if ('error' in auth) return auth.error
+
+  const { id } = await params
+
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json({ error: 'Ungültige Benutzer-ID' }, { status: 400 })
+  }
+
+  const adminClient = createAdminClient()
+
+  // Set is_active to true
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ is_active: true })
+    .eq('id', id)
+
+  if (error) {
+    return NextResponse.json(
+      { error: 'Fehler beim Reaktivieren des Benutzers' },
+      { status: 500 }
+    )
+  }
+
+  // Unban the auth user so they can log in again
+  const { error: unbanError } = await adminClient.auth.admin.updateUserById(id, {
+    ban_duration: 'none',
+  })
+
+  if (unbanError) {
+    return NextResponse.json(
+      { error: 'Benutzer reaktiviert, aber Auth-Sperre konnte nicht aufgehoben werden' },
+      { status: 500 }
+    )
+  }
+
+  return NextResponse.json({ success: true })
+}
+
 // DELETE /api/admin/users/[id] – Deactivate (soft-delete) a user
 export async function DELETE(
   _request: Request,
@@ -11,6 +57,10 @@ export async function DELETE(
   if ('error' in auth) return auth.error
 
   const { id } = await params
+
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json({ error: 'Ungültige Benutzer-ID' }, { status: 400 })
+  }
 
   // Prevent self-deactivation
   if (id === auth.userId) {

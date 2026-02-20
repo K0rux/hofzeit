@@ -25,6 +25,7 @@ import { NeuerBenutzerDialog } from '@/components/admin/neuer-benutzer-dialog'
 import { PasswortResetDialog } from '@/components/admin/passwort-reset-dialog'
 import { RolleAendernDialog } from '@/components/admin/rolle-aendern-dialog'
 import { DeaktivierenDialog } from '@/components/admin/deaktivieren-dialog'
+import { AktivierenDialog } from '@/components/admin/aktivieren-dialog'
 
 export default function AdminPage() {
   const [users, setUsers] = useState<UserProfile[]>([])
@@ -37,6 +38,7 @@ export default function AdminPage() {
   const [passwordResetUser, setPasswordResetUser] = useState<UserProfile | null>(null)
   const [roleChangeUser, setRoleChangeUser] = useState<UserProfile | null>(null)
   const [deactivateUser, setDeactivateUser] = useState<UserProfile | null>(null)
+  const [activateUser, setActivateUser] = useState<UserProfile | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setError(null)
@@ -158,13 +160,19 @@ export default function AdminPage() {
                           >
                             Rolle ändern
                           </DropdownMenuItem>
-                          {user.is_active && (
+                          {user.is_active ? (
                             <DropdownMenuItem
                               onClick={() => setDeactivateUser(user)}
                               disabled={user.id === currentUserId}
                               className="text-destructive focus:text-destructive"
                             >
                               Deaktivieren
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => setActivateUser(user)}
+                            >
+                              Reaktivieren
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -202,6 +210,12 @@ export default function AdminPage() {
         onOpenChange={(open) => !open && setDeactivateUser(null)}
         user={deactivateUser}
         currentUserId={currentUserId}
+        onSuccess={handleSuccess}
+      />
+      <AktivierenDialog
+        open={!!activateUser}
+        onOpenChange={(open) => !open && setActivateUser(null)}
+        user={activateUser}
         onSuccess={handleSuccess}
       />
     </AppLayout>

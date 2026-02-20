@@ -78,12 +78,12 @@ export async function POST(request: Request) {
   const { first_name, last_name, email, password, role } = parsed.data
   const adminClient = createAdminClient()
 
-  // Create auth user with metadata (trigger will auto-create profile)
-  const { error: createError } = await adminClient.auth.admin.createUser({
+  // Create auth user — trigger sets role='employee' by default (BUG-2 fix)
+  const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { first_name, last_name, role },
+    user_metadata: { first_name, last_name },
   })
 
   if (createError) {
@@ -97,6 +97,21 @@ export async function POST(request: Request) {
       { error: 'Fehler beim Anlegen des Benutzers' },
       { status: 500 }
     )
+  }
+
+  // If role is 'admin', update the profile explicitly (trigger always defaults to 'employee')
+  if (role === 'admin' && newUser?.user) {
+    const { error: roleError } = await adminClient
+      .from('profiles')
+      .update({ role: 'admin' })
+      .eq('id', newUser.user.id)
+
+    if (roleError) {
+      return NextResponse.json(
+        { error: 'Benutzer angelegt, aber Rolle konnte nicht gesetzt werden' },
+        { status: 500 }
+      )
+    }
   }
 
   return NextResponse.json({ success: true }, { status: 201 })
