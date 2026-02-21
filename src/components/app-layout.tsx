@@ -47,13 +47,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-background">
         <div className="flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-6">
-            <h1 className="text-lg font-bold">Hofzeit</h1>
-            <nav className="flex items-center gap-1">
+          <div className="flex items-center gap-2 sm:gap-6">
+            <h1 className="text-lg font-bold shrink-0">Hofzeit</h1>
+            <nav className="flex items-center gap-0.5 sm:gap-1">
               <Link
                 href="/dashboard"
                 className={cn(
-                  'text-sm px-3 py-1.5 rounded-md transition-colors',
+                  'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',
                   pathname === '/dashboard'
                     ? 'bg-muted font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -62,32 +62,46 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 Dashboard
               </Link>
               <Link
+                href="/zeiterfassung"
+                className={cn(
+                  'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',
+                  pathname === '/zeiterfassung'
+                    ? 'bg-muted font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                <span className="sm:hidden">Zeit</span>
+                <span className="hidden sm:inline">Zeiterfassung</span>
+              </Link>
+              <Link
                 href="/stammdaten"
                 className={cn(
-                  'text-sm px-3 py-1.5 rounded-md transition-colors',
+                  'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',
                   pathname === '/stammdaten'
                     ? 'bg-muted font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
-                Stammdaten
+                <span className="sm:hidden">Daten</span>
+                <span className="hidden sm:inline">Stammdaten</span>
               </Link>
               {isAdmin && (
                 <Link
                   href="/admin"
                   className={cn(
-                    'text-sm px-3 py-1.5 rounded-md transition-colors',
+                    'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',
                     pathname?.startsWith('/admin')
                       ? 'bg-muted font-medium'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   )}
                 >
-                  Verwaltung
+                  <span className="sm:hidden">Admin</span>
+                  <span className="hidden sm:inline">Verwaltung</span>
                 </Link>
               )}
             </nav>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {userEmail && (
               <span className="text-sm text-muted-foreground max-w-[140px] truncate hidden sm:inline">
                 {userEmail}
@@ -99,13 +113,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               onClick={handleLogout}
               disabled={loggingOut}
             >
-              {loggingOut ? 'Abmelden...' : 'Abmelden'}
+              {loggingOut ? '...' : 'Abmelden'}
             </Button>
           </div>
         </div>
       </header>
       <main className="flex-1 p-4">
-        {children}
+        <div className="max-w-4xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   )
