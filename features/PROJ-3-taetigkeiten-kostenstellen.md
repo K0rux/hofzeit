@@ -47,7 +47,88 @@ Jeder Mitarbeiter kann seine eigenen Tätigkeiten (z. B. „Rasenmähen", „Win
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Neue Seite
+- URL: `/stammdaten` – sichtbar für alle eingeloggten Nutzer
+- Neuer Navigationspunkt "Stammdaten" in `app-layout.tsx`
+
+### Komponentenstruktur
+```
+/stammdaten
++-- Seitenheader ("Stammdaten")
++-- Tabs: "Tätigkeiten" | "Kostenstellen"
+    |
+    +-- Tab "Tätigkeiten"
+    |   +-- "Neue Tätigkeit"-Button (oben rechts)
+    |   +-- Tätigkeiten-Liste (alphabetisch)
+    |   |   +-- Tätigkeit-Zeile (Name, Beschreibung, Edit-Icon, Delete-Icon)
+    |   +-- Leerer Zustand (Hinweistext + Direkt-Button)
+    |
+    +-- Tab "Kostenstellen"
+    |   +-- "Neue Kostenstelle"-Button (oben rechts)
+    |   +-- Kostenstellen-Liste (alphabetisch)
+    |   |   +-- Kostenstelle-Zeile (Name, Nummer/Code, Edit-Icon, Delete-Icon)
+    |   +-- Leerer Zustand (Hinweistext + Direkt-Button)
+    |
+    +-- Formular-Dialog (Anlegen / Bearbeiten)
+    |   +-- Name (Pflicht, max. 100 Zeichen)
+    |   +-- Beschreibung/Nummer (optional)
+    |   +-- Fehleranzeige (Duplikat, Pflichtfeld)
+    |   +-- Abbrechen | Speichern
+    |
+    +-- Löschen-Bestätigungs-Dialog
+        +-- Warnhinweis
+        +-- Abbrechen | Löschen
+```
+
+### Datenmodell (Supabase)
+
+**Tabelle `taetigkeiten`:**
+- id (UUID, PK)
+- user_id (FK → auth.users, NOT NULL)
+- name (TEXT, max. 100 Zeichen, Pflicht)
+- beschreibung (TEXT, max. 255 Zeichen, optional)
+- created_at, updated_at (Timestamps)
+- Unique Constraint: (user_id, name)
+- RLS: Nutzer liest/schreibt nur eigene Zeilen
+
+**Tabelle `kostenstellen`:**
+- id (UUID, PK)
+- user_id (FK → auth.users, NOT NULL)
+- name (TEXT, max. 100 Zeichen, Pflicht)
+- nummer (TEXT, max. 50 Zeichen, optional)
+- created_at, updated_at (Timestamps)
+- Unique Constraint: (user_id, name)
+- RLS: Nutzer liest/schreibt nur eigene Zeilen
+
+### API-Endpunkte
+```
+GET    /api/taetigkeiten          → Liste (alphabetisch, nur eigene)
+POST   /api/taetigkeiten          → Neue Tätigkeit
+PATCH  /api/taetigkeiten/[id]     → Tätigkeit bearbeiten
+DELETE /api/taetigkeiten/[id]     → Tätigkeit löschen
+
+GET    /api/kostenstellen          → Liste (alphabetisch, nur eigene)
+POST   /api/kostenstellen          → Neue Kostenstelle
+PATCH  /api/kostenstellen/[id]     → Kostenstelle bearbeiten
+DELETE /api/kostenstellen/[id]     → Kostenstelle löschen
+```
+
+### Tech-Entscheidungen
+- **Supabase DB**: Daten müssen geräteübergreifend verfügbar sein und werden von PROJ-4 (Zeiterfassung) als Auswahllisten genutzt
+- **RLS**: Datenbankebene erzwingt Datenisolierung pro Nutzer
+- **Tabs (shadcn)**: Platzsparend auf Mobile, beide Listen auf einer Seite
+- **Dialog (shadcn)**: Kein Seitenwechsel, direkte Inline-Interaktion
+- **React useState**: Einfache Seite, kein globaler State nötig
+- **Zod + react-hook-form**: Validierung client- und serverseitig konsistent
+
+### Bereits installierte shadcn/ui-Komponenten
+`Tabs`, `Dialog`, `Form`, `Input`, `Textarea`, `Button`, `Table`, `Alert`, `Badge`
+
+### Edge Case: Gelöschte Einträge in PROJ-4
+- FK in der Zeiterfassungs-Tabelle wird NULLABLE angelegt
+- Bestehende Zeiteinträge behalten historischen Bezug (NULL oder Name-Snapshot)
+- Finale Entscheidung bei PROJ-4
 
 ## QA Test Results
 _To be added by /qa_
