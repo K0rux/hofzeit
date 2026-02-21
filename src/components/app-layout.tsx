@@ -61,6 +61,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/stammdaten"
+                className={cn(
+                  'text-sm px-3 py-1.5 rounded-md transition-colors',
+                  pathname === '/stammdaten'
+                    ? 'bg-muted font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                Stammdaten
+              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"

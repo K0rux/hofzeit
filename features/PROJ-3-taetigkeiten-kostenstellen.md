@@ -1,6 +1,6 @@
 # PROJ-3: Tätigkeiten & Kostenstellen verwalten
 
-## Status: Planned
+## Status: In Review
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20
 
@@ -131,7 +131,128 @@ DELETE /api/kostenstellen/[id]     → Kostenstelle löschen
 - Finale Entscheidung bei PROJ-4
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-02-21
+**App URL:** http://localhost:3000/stammdaten
+**Tester:** QA Engineer (AI)
+
+### Build & Lint Status
+- [x] `npm run build` passes with no errors
+- [x] `npm run lint` passes with no warnings
+- [x] All routes registered correctly (`/stammdaten`, `/api/taetigkeiten`, `/api/kostenstellen`)
+
+### Acceptance Criteria Status
+
+#### AC-1: Getrennte Tabs für Tätigkeiten und Kostenstellen
+- [x] Tabs-Komponente (shadcn) mit "Tätigkeiten" und "Kostenstellen" auf `/stammdaten`
+- [x] Tab-Wechsel funktioniert korrekt
+
+#### AC-2: Formular Tätigkeit (Name Pflicht max. 100, Beschreibung optional max. 255)
+- [x] Name-Feld mit `maxLength={100}` und Pflichtfeld-Validierung (client + server)
+- [x] Beschreibung als Textarea mit `maxLength={255}`
+- [x] Zod-Schema validiert serverseitig: `.min(1)`, `.max(100)`, `.max(255)`
+- [x] DB CHECK Constraints: `char_length(name) <= 100`, `char_length(beschreibung) <= 255`
+
+#### AC-3: Formular Kostenstelle (Name Pflicht max. 100, Nummer optional max. 50)
+- [x] Name-Feld mit `maxLength={100}` und Pflichtfeld-Validierung (client + server)
+- [x] Nummer-Feld mit `maxLength={50}`
+- [x] Zod-Schema validiert serverseitig
+- [x] DB CHECK Constraints vorhanden
+
+#### AC-4: Listen-Ansicht Tätigkeiten (alphabetisch sortiert)
+- [x] Tabelle mit Name, Beschreibung (hidden on mobile), Aktionen
+- [x] API sortiert alphabetisch: `.order('name', { ascending: true })`
+- [x] Loading-Skeleton-State vorhanden
+
+#### AC-5: Listen-Ansicht Kostenstellen (alphabetisch sortiert)
+- [x] Tabelle mit Name, Nummer/Code (hidden on mobile), Aktionen
+- [x] API sortiert alphabetisch
+- [x] Loading-Skeleton-State vorhanden
+
+#### AC-6: Bearbeiten- und Löschen-Buttons pro Eintrag
+- [x] Jede Tabellenzeile hat "Bearbeiten" und "Löschen" Buttons
+- [x] Bearbeiten öffnet vorausgefülltes Formular-Dialog
+- [x] Löschen öffnet Bestätigungs-Dialog
+
+#### AC-7: Löschen erfordert Bestätigung
+- [x] LoeschenDialog zeigt Item-Namen an
+- [x] Text: "Möchten Sie die [Typ] '[Name]' wirklich löschen?"
+- [x] Abbrechen- und Löschen-Buttons vorhanden
+- [x] Löschen-Button ist `variant="destructive"`
+
+#### AC-8: Duplikate werden verhindert
+- [x] DB UNIQUE Constraint: `(user_id, name)` auf beiden Tabellen
+- [x] API erkennt Postgres-Fehler `23505` und gibt benutzerfreundliche Meldung zurück
+- [x] Fehlermeldung wird im Dialog angezeigt
+
+#### AC-9: Nutzer sehen nur eigene Einträge
+- [x] API filtert mit `.eq('user_id', user.id)` bei allen CRUD-Operationen
+- [x] RLS-Policies auf DB-Ebene: `auth.uid() = user_id` für SELECT, INSERT, UPDATE, DELETE
+- [x] Doppelte Absicherung (API + RLS)
+
+#### AC-10: Formulare funktionieren auf Mobilgeräten (375px)
+- [x] Dialog mit `sm:max-w-md` (responsive)
+- [x] Beschreibung/Nummer-Spalte auf Mobile ausgeblendet (`hidden sm:table-cell`)
+- [x] Aktions-Buttons: `min-h-[44px]` hinzugefügt → Touch-Mindestgröße erfüllt (FIXED)
+
+### Edge Cases Status
+
+#### EC-1: Gelöschte Tätigkeit/Kostenstelle in Zeiteinträgen
+- [x] Design-Entscheidung dokumentiert: FK wird in PROJ-4 NULLABLE angelegt
+- [x] Kein FK zu Zeiterfassungs-Tabelle vorhanden (PROJ-4 noch nicht implementiert)
+
+#### EC-2: Leerer Name
+- [x] Client-Validierung: `if (!name.trim())` → Fehlermeldung
+- [x] Server-Validierung: Zod `.min(1)` → 400-Fehler
+- [x] DB: NOT NULL Constraint auf `name`
+
+#### EC-3: Sehr langer Name
+- [x] HTML `maxLength={100}` verhindert Eingabe über 100 Zeichen
+- [x] Server-Validierung: Zod `.max(100)`
+- [x] DB CHECK: `char_length(name) <= 100`
+
+#### EC-4: Keine Einträge vorhanden (Leerer Zustand)
+- [x] Tätigkeiten: "Noch keine Tätigkeiten angelegt." + "Erste Tätigkeit anlegen" Button
+- [x] Kostenstellen: "Noch keine Kostenstellen angelegt." + "Erste Kostenstelle anlegen" Button
+
+### Security Audit Results
+
+- [x] **Authentication**: Middleware schützt alle Routen – unauthentifizierte Requests werden zu `/login` weitergeleitet
+- [x] **Authentication (API)**: Alle API-Routes prüfen `supabase.auth.getUser()` und returnen 401 bei fehlender Authentifizierung
+- [x] **Authorization (IDOR)**: Alle Queries filtern auf `user_id = user.id` – kein Zugriff auf fremde Daten möglich
+- [x] **RLS-Policies**: SELECT, INSERT, UPDATE, DELETE Policies auf beiden Tabellen mit `auth.uid() = user_id`
+- [x] **Input Validation**: Dreifache Validierung (Client → Zod API → DB Constraints)
+- [x] **UUID-Validierung**: `[id]`-Routes validieren UUID-Format vor DB-Zugriff
+- [x] **SQL Injection**: Supabase Client verwendet parametrisierte Queries
+- [x] **XSS**: React escaped automatisch alle Ausgaben, kein `dangerouslySetInnerHTML`
+- [x] **CSRF**: Supabase Auth verwendet httpOnly Cookies
+- [x] **updated_at Trigger**: DB-Trigger `update_updated_at_column()` auf beiden Tabellen
+- [x] **Cascading Delete**: FK zu `auth.users` mit `ON DELETE CASCADE`
+- [x] **Query Limit**: `.limit(500)` auf allen Listen-Abfragen
+- [x] **Double-Submit Prevention**: Submit-Button wird während `submitting` state disabled
+- [ ] **Info (nicht-kritisch)**: Supabase Advisor empfiehlt "Leaked Password Protection" zu aktivieren (betrifft Auth generell, nicht PROJ-3 spezifisch)
+
+### Regression Test (PROJ-1 & PROJ-2)
+
+- [x] Navigation-Links: Dashboard, Stammdaten, Verwaltung (Admin) korrekt in `app-layout.tsx`
+- [x] Middleware schützt weiterhin alle Routes inkl. Admin-Prüfung
+- [x] Keine Änderungen an bestehenden API-Routes oder Komponenten
+- [x] Build kompiliert alle bestehenden Routes erfolgreich
+
+### Bugs Found
+
+#### BUG-1: Touch-Targets zu klein auf Mobile — FIXED
+- **Severity:** Medium
+- **Fix:** `min-h-[44px]` zu allen vier Aktions-Buttons (Bearbeiten/Löschen × 2 Tabs) hinzugefügt
+- **Datei:** `src/app/stammdaten/page.tsx`
+
+### Summary
+- **Acceptance Criteria:** 10/10 passed
+- **Edge Cases:** 4/4 passed
+- **Bugs Found:** 1 total (0 critical, 0 high, 1 medium, 0 low) — alle behoben
+- **Security:** Pass – keine Schwachstellen gefunden
+- **Production Ready:** YES
+- **Recommendation:** Bereit für `/deploy`
 
 ## Deployment
 _To be added by /deploy_
