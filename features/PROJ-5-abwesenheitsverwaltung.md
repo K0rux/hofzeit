@@ -1,6 +1,6 @@
 # PROJ-5: Abwesenheitsverwaltung (Urlaub & Krankheit)
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20
 
@@ -47,7 +47,80 @@ Mitarbeiter können Abwesenheiten (Urlaub, Krankheit) für einzelne Tage oder Ze
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Kontext & Einordnung
+
+Das Feature integriert sich in die bestehende App-Struktur: Die Zeiterfassung-Tagesansicht bekommt einen Abwesenheits-Banner, eine neue Abwesenheits-Seite listet alle Einträge, und die bestehende Tagesnavigation erhält farbliche Markierungen für Abwesenheitstage.
+
+### Komponentenstruktur
+
+```
+App Layout (bestehend)
+│
+├── /zeiterfassung (bestehende Seite – erweitert)
+│   ├── Tagesnavigation (bestehend – mit Farb-Dots für Abwesenheitstage)
+│   ├── Abwesenheits-Banner  ← NEU
+│   │   └── "Heute: Urlaub" / "Heute: Krank" (Hinweis statt Formular)
+│   └── Zeiteintrag-Formular (bestehend, bleibt sichtbar – koexistiert)
+│
+└── /abwesenheiten  ← NEUE SEITE
+    ├── Jahres-Zusammenfassung (Card)
+    │   ├── Urlaubstage gesamt (aktuelles Jahr)
+    │   └── Krankheitstage gesamt (aktuelles Jahr)
+    ├── Neue Abwesenheit Button → Dialog
+    │   └── Abwesenheits-Dialog (NEU)
+    │       ├── Typ-Auswahl: Urlaub / Krankheit (RadioGroup)
+    │       ├── Startdatum (Input type=date)
+    │       ├── Enddatum (Input type=date)
+    │       └── Notiz (optional, Textarea)
+    ├── Abwesenheits-Liste (sortiert nach Startdatum, neueste zuerst)
+    │   └── Abwesenheits-Karte (je Eintrag)
+    │       ├── Typ-Badge (Urlaub grün / Krank orange)
+    │       ├── Zeitraum + Anzahl Tage
+    │       ├── Notiz (falls vorhanden)
+    │       ├── Bearbeiten-Button → Dialog (vorausgefüllt)
+    │       └── Löschen-Button → Bestätigungs-Dialog
+    └── Leerzustand ("Noch keine Abwesenheiten eingetragen")
+```
+
+### Datenmodell
+
+**Tabelle: `abwesenheiten`** (Supabase/PostgreSQL)
+
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `id` | UUID | Eindeutige ID, automatisch generiert |
+| `user_id` | UUID | Verknüpfung zum eingeloggten Mitarbeiter (Foreign Key → auth.users) |
+| `typ` | Text | „urlaub" oder „krankheit" |
+| `startdatum` | Datum | Erster Tag der Abwesenheit |
+| `enddatum` | Datum | Letzter Tag (kann gleich Startdatum sein) |
+| `notiz` | Text | Optional, frei formulierbar |
+| `created_at` | Zeitstempel | Automatisch beim Erstellen gesetzt |
+
+Row Level Security: Jeder Mitarbeiter sieht und bearbeitet nur seine eigenen Einträge.
+
+### API-Endpunkte
+
+| Route | Methode | Aktion |
+|---|---|---|
+| `/api/abwesenheiten` | GET | Alle Abwesenheiten des eingeloggten Nutzers (mit optionalem Monatsfilter) |
+| `/api/abwesenheiten` | POST | Neue Abwesenheit anlegen |
+| `/api/abwesenheiten/[id]` | PUT | Bestehende Abwesenheit bearbeiten |
+| `/api/abwesenheiten/[id]` | DELETE | Abwesenheit löschen |
+
+### Tech-Entscheidungen
+
+| Entscheidung | Gewählt | Begründung |
+|---|---|---|
+| Datenspeicherung | Supabase (Datenbank) | Geräteübergreifend, konsistent mit bestehender Architektur |
+| Monatsansicht-Integration | Farb-Dots in Tagesnavigation | Erweiterung der bestehenden Komponente, kein neuer Kalender nötig |
+| Datumsauswahl | Native HTML date Input | Zuverlässig auf iPhone/Safari, kein zusätzliches Paket |
+| Validierung | Zod + react-hook-form | Bereits im Projekt vorhanden |
+| Abwesenheitstag-Erkennung | API-seitig | Zuverlässiger als client-seitige Datumsberechnung |
+
+### Neue Pakete
+
+Keine — alle benötigten shadcn/ui-Komponenten (Dialog, RadioGroup, Input, Textarea, Badge) sind bereits installiert.
 
 ## QA Test Results
 _To be added by /qa_
