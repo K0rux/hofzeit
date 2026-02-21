@@ -1,6 +1,6 @@
 # PROJ-2: Benutzerverwaltung (Admin)
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20
 
@@ -286,4 +286,13 @@ Keine – Supabase JS ist bereits installiert und unterstützt die Admin API üb
 - **Recommendation:** Enable Leaked Password Protection in Supabase Dashboard, then run `/deploy`
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-21
+**Production URL:** https://hofzeit.vercel.app
+**Git Tag:** v1.2.0-PROJ-2
+**Deployed by:** DevOps Engineer (AI)
+
+### Deployment Notes
+- All 4 code bugs fixed before deployment
+- BUG-5 (Leaked Password Protection): Enable manually in Supabase Dashboard → Authentication → Password Settings
+- Environment variables required in Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
