@@ -1,6 +1,6 @@
 # PROJ-3: Tätigkeiten & Kostenstellen verwalten
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20
 
@@ -255,4 +255,7 @@ DELETE /api/kostenstellen/[id]     → Kostenstelle löschen
 - **Recommendation:** Bereit für `/deploy`
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-21
+**Production URL:** https://hofzeit.vercel.app/stammdaten
+**Git Tag:** v1.3.0-PROJ-3
