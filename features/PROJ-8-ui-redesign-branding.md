@@ -1,6 +1,6 @@
 # PROJ-8: UI/UX Redesign & Branding
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-02-22
 **Last Updated:** 2026-02-22
 
@@ -53,7 +53,84 @@ Die gesamte App erhält ein modernes, professionelles Erscheinungsbild basierend
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Farbpalette aus Logo (`hofzeit_logo.png`)
+
+| Token | Farbe | Verwendung |
+|-------|-------|-----------|
+| `--primary` | Dunkelblau `#1B4F8A` | Hauptbuttons, aktive Navigation, Überschriften |
+| `--secondary` | Grün `#72B832` | Badges, Erfolgs-Zustände, Highlights |
+| `--accent` | Orange `#E07832` | Akzent-Icons, Warnhinweise |
+
+### Komponenten-Struktur
+
+```
+App Layout (app-layout.tsx) ← überarbeitet
++-- Header
+|   +-- Logo Bild (hofzeit_logo.png, 28px Höhe)
+|   +-- App-Name "Hofzeit" (fett, Primärfarbe)
+|   +-- Desktop Navigation
+|   |   +-- Aktiver Link: Primärfarbe + blauer Indikator-Strich
+|   |   +-- Inaktiver Link: gedämpft
+|   +-- Logout Button (outline, Primärfarbe)
++-- Hauptinhalt (mit sanfter Einblend-Animation)
++-- Bottom-Navigation Mobile ← überarbeitet
+    +-- Aktives Icon: Primärfarbe
+
+Login-Seite (login/page.tsx) ← komplett neu gestaltet
++-- Zentrierter Container
+    +-- Logo (groß, zentriert, oben)
+    +-- Login-Card
+        +-- Titel "Anmelden"
+        +-- E-Mail-Feld
+        +-- Passwort-Feld
+        +-- Login-Button (Primärblau, volle Breite)
+        +-- "Angemeldet bleiben"-Checkbox
+
+NEU: EmptyState-Komponente (components/ui/empty-state.tsx)
++-- Lucide-Icon (kontextuell: Uhr, Kalender, etc.)
++-- Titel ("Noch keine Einträge")
++-- Beschreibungstext
++-- Optionaler "Jetzt anlegen"-Button
+
+PDF-Template ← überarbeitet (bestehende Bibliothek aus PROJ-6)
++-- Kopfzeile
+|   +-- Logo links
+|   +-- Berichtstitel rechts
+|   +-- Zeitraum (z.B. "März 2026")
++-- Tabelle
+|   +-- Header: Dunkelblau Hintergrund, weißer Text
+|   +-- Geraden Zeilen: Weißer Hintergrund
+|   +-- Ungeraden Zeilen: Sehr helles Blau
++-- Fußzeile: Seitenzahl
+```
+
+### Datenhaltung
+Keine neuen Daten oder Datenbank-Tabellen. Rein visuelle Änderungen über CSS Custom Properties.
+
+### Technische Entscheidungen
+
+| Entscheidung | Warum |
+|---|---|
+| **CSS Custom Properties** für Farben | shadcn/ui liest Farben aus CSS-Variablen – einmal in `globals.css` geändert, übernehmen alle 20+ shadcn-Komponenten automatisch das neue Theme |
+| **Kein Framer Motion** | Spec fordert max. 300ms CSS-Transitions – natives CSS ist schneller, kleiner, kein zusätzliches Paket |
+| **Bestehende PDF-Bibliothek** beibehalten | Kein Bibliothekswechsel – nur Logo-URL und Farb-Werte in bestehender Template-Logik anpassen |
+| **`prefers-reduced-motion`** in CSS | Einmalig definiert, wirkt auf alle App-Animationen |
+
+### Betroffene Dateien
+
+| Datei | Änderung |
+|---|---|
+| `src/app/globals.css` | Neue `--primary`, `--secondary`, `--accent` Farbwerte + Keyframe-Animationen |
+| `tailwind.config.ts` | Neue `fade-in` / `slide-up` Animation-Utilities |
+| `src/components/app-layout.tsx` | Logo-Bild einfügen, aktive Nav-Farbe auf Primärblau |
+| `src/components/bottom-nav.tsx` | Aktives Icon auf Primärblau |
+| `src/components/login-form.tsx` | Logo oben, modernes Card-Layout |
+| PDF-Template | Logo-Header, Farbstreifen, Tabellenformatierung |
+| NEU: `src/components/ui/empty-state.tsx` | Wiederverwendbare Leer-Zustands-Komponente |
+
+### Neue Pakete
+Keine – alle benötigten Tools sind bereits installiert (shadcn/ui, Tailwind CSS, Lucide React).
 
 ## QA Test Results
 _To be added by /qa_
