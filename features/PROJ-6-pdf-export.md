@@ -1,6 +1,6 @@
 # PROJ-6: PDF-Export
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-22
 
@@ -264,4 +264,7 @@ Keine neuen Datenbank-Tabellen. Kein Schema-Change.
 - **Recommendation:** Bereit für `/deploy`
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://hofzeit.vercel.app/export
+- **Deployed:** 2026-02-22
+- **Git Tag:** v1.6.0-PROJ-6
