@@ -74,6 +74,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="hidden sm:inline">Zeiterfassung</span>
               </Link>
               <Link
+                href="/abwesenheiten"
+                className={cn(
+                  'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',
+                  pathname === '/abwesenheiten'
+                    ? 'bg-muted font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                <span className="sm:hidden">Abwes.</span>
+                <span className="hidden sm:inline">Abwesenheiten</span>
+              </Link>
+              <Link
                 href="/stammdaten"
                 className={cn(
                   'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',

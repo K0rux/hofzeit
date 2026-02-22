@@ -9,6 +9,8 @@ import { Tagesnavigation } from '@/components/zeiterfassung/tagesnavigation'
 import { ZeiteintragKarte } from '@/components/zeiterfassung/zeiteintrag-karte'
 import { ZeiteintragFormDialog } from '@/components/zeiterfassung/zeiteintrag-form-dialog'
 import { ZeiteintragLoeschenDialog } from '@/components/zeiterfassung/loeschen-dialog'
+import { AbwesenheitBanner } from '@/components/abwesenheiten/abwesenheit-banner'
+import type { Abwesenheit } from '@/components/abwesenheiten/types'
 import type { Zeiteintrag, TaetigkeitOption, KostenstelleOption } from '@/components/zeiterfassung/types'
 import { getTodayStr, formatDauerDE } from '@/components/zeiterfassung/types'
 
@@ -33,6 +35,9 @@ export default function ZeiterfassungPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteItem, setDeleteItem] = useState<Zeiteintrag | null>(null)
 
+  // Absences for current day
+  const [tagesAbwesenheiten, setTagesAbwesenheiten] = useState<Abwesenheit[]>([])
+
   // Fetch taetigkeiten + kostenstellen once
   useEffect(() => {
     async function fetchMasterData() {
@@ -52,14 +57,25 @@ export default function ZeiterfassungPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/zeiteintraege?date=${date}`)
-      if (!res.ok) {
-        const data = await res.json()
+      const [zeitRes, abwRes] = await Promise.all([
+        fetch(`/api/zeiteintraege?date=${date}`),
+        fetch(`/api/abwesenheiten?datum=${date}`),
+      ])
+
+      if (!zeitRes.ok) {
+        const data = await zeitRes.json()
         setError(data.error || 'Fehler beim Laden der Zeiteinträge')
         return
       }
-      const data = await res.json()
-      setEintraege(Array.isArray(data) ? data : [])
+      const zeitData = await zeitRes.json()
+      setEintraege(Array.isArray(zeitData) ? zeitData : [])
+
+      if (abwRes.ok) {
+        const abwData = await abwRes.json()
+        setTagesAbwesenheiten(Array.isArray(abwData) ? abwData : [])
+      } else {
+        setTagesAbwesenheiten([])
+      }
     } catch {
       setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
     } finally {
@@ -104,7 +120,14 @@ export default function ZeiterfassungPage() {
         </div>
 
         {/* Tagesnavigation */}
-        <Tagesnavigation datum={datum} onDatumChange={handleDatumChange} />
+        <Tagesnavigation
+          datum={datum}
+          onDatumChange={handleDatumChange}
+          abwesenheitTyp={tagesAbwesenheiten[0]?.typ ?? null}
+        />
+
+        {/* Abwesenheits-Banner */}
+        <AbwesenheitBanner abwesenheiten={tagesAbwesenheiten} />
 
         {/* Error loading entries */}
         {error && (
