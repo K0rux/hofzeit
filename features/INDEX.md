@@ -18,7 +18,7 @@
 | PROJ-4 | Zeiterfassung | Deployed | [PROJ-4-zeiterfassung.md](PROJ-4-zeiterfassung.md) | 2026-02-20 |
 | PROJ-5 | Abwesenheitsverwaltung (Urlaub & Krankheit) | Deployed | [PROJ-5-abwesenheitsverwaltung.md](PROJ-5-abwesenheitsverwaltung.md) | 2026-02-20 |
 | PROJ-6 | PDF-Export | Deployed | [PROJ-6-pdf-export.md](PROJ-6-pdf-export.md) | 2026-02-20 |
-| PROJ-7 | PWA & Mobile Optimierung | In Progress | [PROJ-7-pwa-mobile-optimierung.md](PROJ-7-pwa-mobile-optimierung.md) | 2026-02-22 |
+| PROJ-7 | PWA & Mobile Optimierung | Deployed | [PROJ-7-pwa-mobile-optimierung.md](PROJ-7-pwa-mobile-optimierung.md) | 2026-02-22 |
 | PROJ-8 | UI/UX Redesign & Branding | Planned | [PROJ-8-ui-redesign-branding.md](PROJ-8-ui-redesign-branding.md) | 2026-02-22 |
 | PROJ-9 | Mitarbeiter-Arbeitszeitprofil | Planned | [PROJ-9-arbeitszeitprofil.md](PROJ-9-arbeitszeitprofil.md) | 2026-02-22 |
 | PROJ-10 | Monatsabschluss | Planned | [PROJ-10-monatsabschluss.md](PROJ-10-monatsabschluss.md) | 2026-02-22 |
