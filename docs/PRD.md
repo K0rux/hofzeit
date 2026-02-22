@@ -22,12 +22,17 @@ Hofzeit ist ein webbasiertes Zeiterfassungssystem für kommunale Bauhöfe (1–2
 
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 (MVP) | PROJ-1: Benutzerauthentifizierung | Planned |
-| P0 (MVP) | PROJ-2: Benutzerverwaltung (Admin) | Planned |
-| P0 (MVP) | PROJ-3: Tätigkeiten & Kostenstellen verwalten | Planned |
-| P0 (MVP) | PROJ-4: Zeiterfassung | Planned |
-| P1 | PROJ-5: Abwesenheitsverwaltung (Urlaub & Krankheit) | Planned |
-| P1 | PROJ-6: PDF-Export | Planned |
+| P0 (MVP) | PROJ-1: Benutzerauthentifizierung | Deployed |
+| P0 (MVP) | PROJ-2: Benutzerverwaltung (Admin) | Deployed |
+| P0 (MVP) | PROJ-3: Tätigkeiten & Kostenstellen verwalten | Deployed |
+| P0 (MVP) | PROJ-4: Zeiterfassung | Deployed |
+| P1 | PROJ-5: Abwesenheitsverwaltung (Urlaub & Krankheit) | Deployed |
+| P1 | PROJ-6: PDF-Export | Deployed |
+| P1 | PROJ-7: PWA & Mobile Optimierung | Planned |
+| P1 | PROJ-8: UI/UX Redesign & Branding | Planned |
+| P2 | PROJ-9: Mitarbeiter-Arbeitszeitprofil | Planned |
+| P2 | PROJ-10: Monatsabschluss | Planned |
+| P2 | PROJ-11: Admin-Bereich Überarbeitung | Planned |
 
 ## Success Metrics
 - Alle Mitarbeiter des Bauhofs können sich selbstständig einloggen und Zeiten erfassen
