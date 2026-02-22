@@ -1,8 +1,8 @@
 # PROJ-6: PDF-Export
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-02-20
-**Last Updated:** 2026-02-20
+**Last Updated:** 2026-02-22
 
 ## Dependencies
 - Requires: PROJ-1 (Benutzerauthentifizierung) – Nutzer muss eingeloggt sein
@@ -49,7 +49,90 @@ Mitarbeiter können ihre erfassten Arbeitszeiten, Tätigkeiten und Kostenstellen
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Entscheidung: Client-seitige PDF-Generierung
+Das PDF wird vollständig im Browser des Nutzers generiert (kein Server-Rendering). Daten werden nicht serverseitig zwischengespeichert — DSGVO-konform.
+
+**Abweichung von Feature-Spec:** Die Zeiterfassungs-Datenbank speichert keine Startzeit/Endzeit, nur die Gesamtdauer. Die PDF-Tabellenspalten wurden entsprechend angepasst: statt „Startzeit / Endzeit / Dauer" nur **„Dauer (Std.)"**.
+
+---
+
+### Komponentenstruktur
+
+```
+Export-Seite (/export)
++-- Zeitraum-Auswahl
+|   +-- Monats-Wähler  (shadcn Select)
+|   +-- Jahres-Wähler  (shadcn Select)
++-- Vorschau-Karte  (shadcn Card — erscheint nach Auswahl)
+|   +-- Anzahl Zeiteinträge
+|   +-- Gesamtstunden
+|   +-- Urlaubstage + Krankheitstage
++-- Leer-Zustand  ("Keine Einträge für diesen Zeitraum")
++-- Export-Button  "PDF herunterladen"  (shadcn Button + Ladeindikator)
+```
+
+---
+
+### PDF-Aufbau (A4, Hochformat)
+
+| Abschnitt | Inhalt |
+|---|---|
+| Kopfzeile | „Hofzeit – Zeiterfassung", Name des Mitarbeiters, Zeitraum, Erstellungsdatum |
+| Zeiteinträge-Tabelle | Datum, Wochentag, Dauer (Std.), Tätigkeit, Kostenstelle, Notiz |
+| Abwesenheiten-Tabelle | Typ (Urlaub/Krankheit), Von, Bis, Anzahl Tage, Notiz |
+| Zusammenfassung | Gesamtstunden, Stunden je Tätigkeit, Stunden je Kostenstelle, Urlaubstage, Krankheitstage |
+
+Mehrseitige Ausgabe wird automatisch von jspdf-autotable verwaltet.
+
+---
+
+### Datenfluss
+
+```
+1. User wählt Monat + Jahr
+2. App ruft parallel ab:
+     GET /api/zeiteintraege?von=YYYY-MM-01&bis=YYYY-MM-DD
+     GET /api/abwesenheiten?von=YYYY-MM-01&bis=YYYY-MM-DD
+3. Vorschau-Statistiken werden berechnet und angezeigt
+4. User klickt "PDF herunterladen"
+5. jsPDF + autoTable erstellt das PDF im Browser
+6. Browser-Download wird ausgelöst
+   Dateiname: hofzeit-export-[nachname]-[YYYY-MM].pdf
+```
+
+---
+
+### Backend-Änderungen (minimal)
+
+Beide bestehenden API-Routen werden um optionale Datumsbereich-Parameter erweitert:
+
+| Route | Neue Parameter | Bestehende Parameter |
+|---|---|---|
+| `GET /api/zeiteintraege` | `von`, `bis` (YYYY-MM-DD) | `date` bleibt unverändert |
+| `GET /api/abwesenheiten` | `von`, `bis` (YYYY-MM-DD) | `datum` bleibt unverändert |
+
+Keine neuen Datenbank-Tabellen. Kein Schema-Change.
+
+---
+
+### Tech-Entscheidungen
+
+| Thema | Entscheidung | Begründung |
+|---|---|---|
+| PDF-Engine | Client-seitig (jsPDF) | iPhone Safari kompatibel, keine Server-Kosten, DSGVO-konform |
+| Tabellen | jspdf-autotable | Automatische Seitenumbrüche, gepflegte Library |
+| Zeitraum-Auswahl | Monat + Jahr (zwei Selects) | Einfachste UX für monatliche Auswertung; benutzerdefinierter Datumsbereich als Folge-Feature |
+| Sicherheit | Bestehende RLS-Policies | Nutzer kann nur eigene Daten über die APIs abrufen |
+
+---
+
+### Neue Abhängigkeiten
+
+| Paket | Zweck |
+|---|---|
+| `jspdf` | Core-PDF-Generierung im Browser |
+| `jspdf-autotable` | Tabellen-Plugin für jsPDF |
 
 ## QA Test Results
 _To be added by /qa_
