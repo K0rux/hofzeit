@@ -1,6 +1,6 @@
 # PROJ-5: Abwesenheitsverwaltung (Urlaub & Krankheit)
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-20
 
@@ -273,4 +273,7 @@ Keine — alle benötigten shadcn/ui-Komponenten (Dialog, RadioGroup, Input, Tex
 - **Recommendation:** Fix BUG-1 (Monatsübersicht-Markierung) before deployment. BUG-2 is optional.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://hofzeit.vercel.app/abwesenheiten
+- **Deployed:** 2026-02-22
+- **Git Tag:** v1.5.0-PROJ-5

@@ -16,7 +16,7 @@
 | PROJ-2 | Benutzerverwaltung (Admin) | Deployed | [PROJ-2-benutzerverwaltung-admin.md](PROJ-2-benutzerverwaltung-admin.md) | 2026-02-20 |
 | PROJ-3 | Tätigkeiten & Kostenstellen verwalten | Deployed | [PROJ-3-taetigkeiten-kostenstellen.md](PROJ-3-taetigkeiten-kostenstellen.md) | 2026-02-20 |
 | PROJ-4 | Zeiterfassung | Deployed | [PROJ-4-zeiterfassung.md](PROJ-4-zeiterfassung.md) | 2026-02-20 |
-| PROJ-5 | Abwesenheitsverwaltung (Urlaub & Krankheit) | In Review | [PROJ-5-abwesenheitsverwaltung.md](PROJ-5-abwesenheitsverwaltung.md) | 2026-02-20 |
+| PROJ-5 | Abwesenheitsverwaltung (Urlaub & Krankheit) | Deployed | [PROJ-5-abwesenheitsverwaltung.md](PROJ-5-abwesenheitsverwaltung.md) | 2026-02-20 |
 | PROJ-6 | PDF-Export | Planned | [PROJ-6-pdf-export.md](PROJ-6-pdf-export.md) | 2026-02-20 |
 
 <!-- Add features above this line -->
