@@ -53,7 +53,85 @@ Die App soll als Progressive Web App (PWA) auf dem Homescreen von iPhone/Android
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Übersicht
+Das Feature gliedert sich in 4 Teilbereiche: PWA-Setup, Mobile Navigation, "Eingeloggt bleiben" und Touch-Optimierung. Es sind keine Datenbankänderungen nötig — alle Änderungen sind frontend-seitig.
+
+### Komponentenstruktur
+
+**Mobile-Layout (neu):**
+```
+AppLayout (modifiziert)
++-- Header (Desktop: unverändert; Mobile: nur Logo + Abmelden-Button)
+|
++-- Hauptinhalt (alle Seiten, unverändert)
+|
++-- BottomNav (NEU — nur Mobile, < 768px)
+    +-- Tab: Dashboard        [Haus-Icon]
+    +-- Tab: Zeiterfassung    [Uhr-Icon]
+    +-- Tab: Abwesenheiten    [Kalender-Icon]
+    +-- Tab: Export           [Download-Icon]
+    +-- Tab: Mehr             [•••-Icon]
+        +-- Sheet (von unten): Stammdaten, Verwaltung (nur Admin), Abmelden
+```
+
+**Neue Dateien:**
+```
+src/app/manifest.ts              PWA-Manifest (Next.js nativ)
+src/app/offline/page.tsx         Offline-Fallback-Seite
+src/components/bottom-nav.tsx    Mobile Tab Bar (4 Tabs + Mehr)
+public/sw.js                     Minimaler Service Worker
+public/icons/icon-192.png        PWA-Icon 192×192px
+public/icons/icon-512.png        PWA-Icon 512×512px
+public/icons/apple-touch-icon.png  iOS Homescreen Icon 180×180px
+```
+
+**Geänderte Dateien:**
+```
+src/app/layout.tsx               PWA-Meta-Tags (apple-touch-icon, theme-color)
+src/components/app-layout.tsx    Header auf Mobile vereinfacht, BottomNav eingebunden
+src/components/login-form.tsx    Checkbox "Eingeloggt bleiben" ergänzt
+src/lib/supabase.ts              Storage-Option je nach "rememberMe"-Cookie
+```
+
+### Datenmodell
+
+Kein neues Datenbankschema. Alle Daten werden im Browser verwaltet:
+
+**PWA-Manifest-Konfiguration:**
+- App-Name: "Hofzeit", Kurzname: "Hofzeit"
+- Start-URL: `/dashboard`, Anzeigemodus: `standalone`
+- Icons: 192px und 512px (generiert aus vorhandenem `hofzeit_logo.png`)
+- Theme-Color: wird beim Frontend-Build festgelegt
+
+**"Eingeloggt bleiben" — Session-Steuerung:**
+- Checkbox nicht aktiviert → Supabase Session in `sessionStorage` → nach Browser-Schließen gelöscht
+- Checkbox aktiviert → Supabase Session in `localStorage` → bleibt 30 Tage erhalten (Supabase Refresh-Token-Lifetime)
+- Nutzerwahl wird in einem Browser-Cookie (`hofzeit_remember_me`) gespeichert, damit der Supabase-Client bei App-Neustart die richtige Storage-Option wählt
+- Logout löscht die Session sofort aus dem jeweiligen Speicher
+
+**Service Worker — Offline-Verhalten:**
+- Minimal: Cacht nur die Offline-Fallback-Seite
+- Bei fehlender Verbindung → zeigt `/offline` Seite mit Hinweis "Keine Internetverbindung"
+- Bei App-Update → Nutzer wird benachrichtigt und kann neu laden
+
+### Technische Entscheidungen
+
+| Entscheidung | Gewählt | Begründung |
+|---|---|---|
+| PWA-Manifest | `src/app/manifest.ts` (Next.js nativ) | Kein extra Package nötig |
+| Service Worker | Custom `public/sw.js` (minimal) | `next-pwa` hat bekannte Probleme mit App Router |
+| Mobile Navigation | Bottom Tab Bar + shadcn Sheet für "Mehr" | Daumengerecht; skaliert für 4–6 Menüpunkte |
+| "Eingeloggt bleiben" | sessionStorage vs. localStorage via Cookie-Flag | Supabase unterstützt beide Backends nativ |
+| Icons | Generiert aus vorhandenem `hofzeit_logo.png` | Kein neues Asset nötig |
+
+### Abhängigkeiten (neue Packages)
+
+Keine neuen npm-Packages erforderlich. Genutzt werden:
+- Next.js App Router (native PWA-Manifest-Unterstützung)
+- Supabase Client (storage-Option eingebaut)
+- Lucide React (Icons für Tab Bar, bereits installiert)
+- shadcn/ui Sheet (für "Mehr"-Drawer, bereits installiert)
 
 ## QA Test Results
 _To be added by /qa_
