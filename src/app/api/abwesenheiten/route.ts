@@ -27,6 +27,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url)
   const datum = searchParams.get('datum')
+  const von = searchParams.get('von')
+  const bis = searchParams.get('bis')
+
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/
 
   let query = supabase
     .from('abwesenheiten')
@@ -35,10 +39,22 @@ export async function GET(request: Request) {
 
   if (datum) {
     // Filter absences that cover a specific date
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) {
+    if (!dateRegex.test(datum)) {
       return NextResponse.json({ error: 'Ungültiges Datum' }, { status: 400 })
     }
     query = query.lte('startdatum', datum).gte('enddatum', datum)
+  } else if (von && bis) {
+    // Filter absences that overlap with the date range
+    if (!dateRegex.test(von) || !dateRegex.test(bis)) {
+      return NextResponse.json({ error: 'Ungültiges Datum' }, { status: 400 })
+    }
+    if (von > bis) {
+      return NextResponse.json({ error: 'Von-Datum muss vor oder gleich Bis-Datum liegen' }, { status: 400 })
+    }
+    if (!rateLimit(`read:abwesenheiten:${user.id}`, 60, 60_000)) {
+      return NextResponse.json({ error: 'Zu viele Anfragen. Bitte warten Sie einen Moment.' }, { status: 429 })
+    }
+    query = query.lte('startdatum', bis).gte('enddatum', von)
   }
 
   const { data, error } = await query

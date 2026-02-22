@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -55,6 +56,7 @@ export function ZeiteintragFormDialog({
   const [taetigkeitFreitext, setTaetigkeitFreitext] = useState('')
   const [kostenstelleId, setKostenstelleId] = useState('')
   const [dauerStunden, setDauerStunden] = useState('')
+  const [notiz, setNotiz] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -74,6 +76,7 @@ export function ZeiteintragFormDialog({
       }
       setKostenstelleId(editItem.kostenstelle_id)
       setDauerStunden(String(editItem.dauer_stunden))
+      setNotiz(editItem.notiz ?? '')
     } else if (open && !editItem) {
       setDatum(defaultDatum)
       setTaetigkeitModus(noTaetigkeiten ? 'freitext' : 'liste')
@@ -81,6 +84,7 @@ export function ZeiteintragFormDialog({
       setTaetigkeitFreitext('')
       setKostenstelleId('')
       setDauerStunden('')
+      setNotiz('')
     }
     setErrors({})
     setServerError(null)
@@ -134,6 +138,7 @@ export function ZeiteintragFormDialog({
         taetigkeit_freitext: taetigkeitModus === 'freitext' ? taetigkeitFreitext.trim() : null,
         kostenstelle_id: kostenstelleId,
         dauer_stunden: parseFloat(dauerStunden),
+        notiz: notiz.trim() || null,
       }
 
       const url = isEdit ? `/api/zeiteintraege/${editItem!.id}` : '/api/zeiteintraege'
@@ -272,6 +277,19 @@ export function ZeiteintragFormDialog({
             {errors.kostenstelle && (
               <p className="text-sm text-destructive">{errors.kostenstelle}</p>
             )}
+          </div>
+
+          {/* Notiz */}
+          <div className="space-y-2">
+            <Label htmlFor="ze-notiz">Notiz <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <Textarea
+              id="ze-notiz"
+              placeholder="z. B. Baustelle Musterstraße"
+              value={notiz}
+              onChange={(e) => setNotiz(e.target.value)}
+              maxLength={500}
+              rows={2}
+            />
           </div>
 
           {/* Dauer */}

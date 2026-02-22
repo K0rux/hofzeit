@@ -97,6 +97,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="sm:hidden">Daten</span>
                 <span className="hidden sm:inline">Stammdaten</span>
               </Link>
+              <Link
+                href="/export"
+                className={cn(
+                  'text-sm px-2 sm:px-3 py-1.5 rounded-md transition-colors',
+                  pathname === '/export'
+                    ? 'bg-muted font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                <span className="sm:hidden">PDF</span>
+                <span className="hidden sm:inline">Export</span>
+              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"

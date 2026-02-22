@@ -14,6 +14,7 @@ const updateSchema = z.object({
     .number()
     .gt(0, 'Dauer muss größer als 0 sein')
     .max(24, 'Maximale Dauer beträgt 24 Stunden'),
+  notiz: z.string().trim().max(500).nullable().optional(),
 })
 
 // PUT /api/zeiteintraege/[id]
@@ -53,7 +54,7 @@ export async function PUT(
     return NextResponse.json({ error: firstError }, { status: 400 })
   }
 
-  const { datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden } = parsed.data
+  const { datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden, notiz } = parsed.data
 
   const hasTaetigkeitId = !!taetigkeit_id
   const hasFreitext = !!(taetigkeit_freitext && taetigkeit_freitext.trim())
@@ -75,6 +76,7 @@ export async function PUT(
       taetigkeit_freitext: hasFreitext ? taetigkeit_freitext!.trim() : null,
       kostenstelle_id,
       dauer_stunden,
+      notiz: notiz?.trim() || null,
       geaendert_am: new Date().toISOString(),
     })
     .eq('id', id)

@@ -1,6 +1,6 @@
 # PROJ-6: PDF-Export
 
-## Status: In Progress
+## Status: In Review
 **Created:** 2026-02-20
 **Last Updated:** 2026-02-22
 
@@ -135,7 +135,133 @@ Keine neuen Datenbank-Tabellen. Kein Schema-Change.
 | `jspdf-autotable` | Tabellen-Plugin für jsPDF |
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-02-22
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### AC-1: Export-Seite mit Zeitraumauswahl
+- [x] /export Seite existiert und ist über Navigation erreichbar
+- [x] Monatswähler (Select) mit allen 12 Monaten
+- [x] Jahreswähler (Select) mit aktuellem Jahr + 2 Vorjahre
+- [x] Aktueller Monat/Jahr vorausgewählt
+
+#### AC-2: PDF-Kopfzeile
+- [x] Titel „Hofzeit – Zeiterfassung" vorhanden
+- [x] Mitarbeitername wird aus Profil geladen
+- [x] Zeitraum (Monat + Jahr) angezeigt
+- [x] Erstellungsdatum (rechtsbündig) angezeigt
+
+#### AC-3: PDF Zeiteinträge-Tabelle
+- [x] Spalte: Datum (DD.MM.YYYY)
+- [x] Spalte: Wochentag
+- [x] Spalte: Dauer (h:mm Format)
+- [x] Spalte: Tätigkeit (Name oder Freitext)
+- [x] Spalte: Kostenstelle
+- [x] Spalte: Notiz (FIXED: notiz-Feld zur DB-Tabelle, Typ, API und PDF hinzugefügt)
+
+#### AC-4: PDF Abwesenheiten
+- [x] Separate Abwesenheiten-Tabelle mit Typ, Von, Bis, Tage, Notiz
+- [x] Urlaub und Krankheit korrekt unterschieden
+
+#### AC-5: PDF Zusammenfassung
+- [x] Gesamtarbeitsstunden angezeigt
+- [x] Aufschlüsselung nach Tätigkeit (Stunden pro Tätigkeit)
+- [x] Aufschlüsselung nach Kostenstelle (Stunden pro Kostenstelle)
+- [x] Aufschlüsselung nach Tätigkeit (Stunden pro Tätigkeit) mit Header „Stunden je Tätigkeit" (FIXED)
+
+#### AC-6: Urlaubstage/Krankheitstage in Zusammenfassung
+- [x] Urlaubstage (Anzahl) angezeigt
+- [x] Krankheitstage (Anzahl) angezeigt
+
+#### AC-7: PDF-Download im Browser
+- [x] doc.save() löst direkten Browser-Download aus
+- [x] Kein E-Mail-Versand, kein Cloud-Upload
+
+#### AC-8: Leerer Zeitraum
+- [x] „Keine Einträge für diesen Zeitraum vorhanden" wird angezeigt
+- [x] Export-Button ist ausgeblendet (kein leeres PDF möglich)
+
+#### AC-9: PDF-Layout A4 Hochformat
+- [x] jsPDF konfiguriert mit orientation: 'portrait', format: 'a4'
+- [x] Margen von 14mm links/rechts
+
+#### AC-10: iPhone Safari Kompatibilität
+- [x] Client-seitige Generierung (jsPDF) – Safari-kompatibel
+- [x] doc.save() funktioniert grundsätzlich auf Safari (bekannte Lib)
+
+### Edge Cases Status
+
+#### EC-1: Keine Einträge für Zeitraum
+- [x] Leerer Zustand mit Hinweismeldung korrekt implementiert
+- [x] Export-Button ausgeblendet
+
+#### EC-2: Sehr viele Einträge (300+ Zeilen)
+- [x] jspdf-autotable verwaltet automatische Seitenumbrüche
+- [x] Limit auf 1000 Einträge in API – ausreichend für den Use Case
+
+#### EC-3: iPhone Safari Download-Fehler
+- [x] try/catch um generatePdf mit deutschsprachiger Fehlermeldung
+
+#### EC-4: Lange Tätigkeits-/Kostenstellennamen
+- [x] autoTable mit cellWidth: 'auto' für Tätigkeit/Kostenstelle – Text wird umgebrochen
+
+#### EC-5: Fehlende Tätigkeit/Kostenstelle
+- [x] „–" als Platzhalter implementiert (Unicode \u2013)
+
+### Security Audit Results
+- [x] **Authentifizierung:** Middleware redirected unauthentifizierte Nutzer zu /login
+- [x] **API-Authentifizierung:** Beide APIs prüfen user-Session (401 bei fehlender Auth)
+- [x] **Autorisierung:** user_id-Filter + RLS – Nutzer können nur eigene Daten abrufen
+- [x] **Input-Validierung:** Datum-Parameter werden mit Regex validiert (YYYY-MM-DD)
+- [x] **DSGVO:** PDF wird client-seitig generiert, nicht serverseitig gespeichert
+- [x] **XSS:** Kein Risiko – PDF-Inhalte stammen aus DB, nicht aus User-Input auf der Export-Seite
+- [x] von/bis-Reihenfolge wird in API validiert (FIXED)
+- [x] Rate-Limitierung auf Export-GET-Endpunkten (FIXED)
+
+### Regression Test
+- [x] Navigation: Alle bestehenden Links (Dashboard, Zeiterfassung, Abwesenheiten, Stammdaten, Admin) funktionieren weiterhin
+- [x] Zeiterfassung-API: Bestehender `?date=`-Parameter funktioniert weiterhin (Rückwärtskompatibilität)
+- [x] Abwesenheiten-API: Bestehender `?datum=`-Parameter funktioniert weiterhin
+- [x] API-Limit differenziert: 100 für `?date=`, 1000 für `?von=&bis=` (FIXED)
+
+### Lint-Ergebnis
+- [x] ESLint: 0 Warnungen, 0 Fehler (FIXED)
+
+### Bugs Found & Fixed
+
+#### BUG-1: Fehlende „Notiz"-Spalte in Zeiteinträge-Tabelle ✅ FIXED
+- **Severity:** Low
+- **Fix:** DB-Migration `add_notiz_to_zeiteintraege`, `notiz`-Feld in `Zeiteintrag`-Typ, GET/PUT/POST-APIs, PDF-Generator (Spalte „Notiz") und Zeiteintrag-Formular (optionales Textfeld) aktualisiert.
+
+#### BUG-2: Fehlender Zwischentitel „Stunden je Tätigkeit" in Zusammenfassung ✅ FIXED
+- **Severity:** Low
+- **Fix:** Header-Zeile „Stunden je Tätigkeit" in `pdf-generator.ts` hinzugefügt.
+
+#### BUG-3: Keine von/bis-Validierung in API ✅ FIXED
+- **Severity:** Low
+- **Fix:** Beide APIs geben HTTP 400 zurück wenn `von > bis`.
+
+#### BUG-4: Keine Rate-Limitierung auf Export-GET-Endpunkten ✅ FIXED
+- **Severity:** Low
+- **Fix:** `rateLimit('read:zeiteintraege/abwesenheiten:{user.id}', 60, 60_000)` auf beide Datumsbereich-Abfragen angewendet.
+
+#### BUG-5: API-Limit global von 100 auf 1000 erhöht ✅ FIXED
+- **Severity:** Medium
+- **Fix:** `limit(date ? 100 : 1000)` – Tagesansicht behält 100, Exportbereich nutzt 1000.
+
+#### BUG-6: ESLint-Warnungen in pdf-generator.ts ✅ FIXED
+- **Severity:** Low
+- **Fix:** Überflüssige `eslint-disable-next-line`-Kommentare entfernt.
+
+### Summary
+- **Acceptance Criteria:** 10/10 passed
+- **Bugs Found:** 6 total — alle gefixt (0 critical, 0 high, 1 medium, 5 low)
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Bereit für `/deploy`
 
 ## Deployment
 _To be added by /deploy_

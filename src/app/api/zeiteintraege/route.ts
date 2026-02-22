@@ -12,6 +12,7 @@ const createSchema = z.object({
     .number()
     .gt(0, 'Dauer muss größer als 0 sein')
     .max(24, 'Maximale Dauer beträgt 24 Stunden'),
+  notiz: z.string().trim().max(500).nullable().optional(),
 })
 
 // GET /api/zeiteintraege?date=YYYY-MM-DD
@@ -27,22 +28,55 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url)
   const date = searchParams.get('date')
+  const von = searchParams.get('von')
+  const bis = searchParams.get('bis')
 
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+
+  // Support either single date or date range (von/bis)
+  if (!date && (!von || !bis)) {
     return NextResponse.json({ error: 'Ungültiges oder fehlendes Datum' }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  if (date && !dateRegex.test(date)) {
+    return NextResponse.json({ error: 'Ungültiges oder fehlendes Datum' }, { status: 400 })
+  }
+
+  if (von && !dateRegex.test(von)) {
+    return NextResponse.json({ error: 'Ungültiges Von-Datum' }, { status: 400 })
+  }
+
+  if (bis && !dateRegex.test(bis)) {
+    return NextResponse.json({ error: 'Ungültiges Bis-Datum' }, { status: 400 })
+  }
+
+  if (von && bis && von > bis) {
+    return NextResponse.json({ error: 'Von-Datum muss vor oder gleich Bis-Datum liegen' }, { status: 400 })
+  }
+
+  if (von && bis && !rateLimit(`read:zeiteintraege:${user.id}`, 60, 60_000)) {
+    return NextResponse.json({ error: 'Zu viele Anfragen. Bitte warten Sie einen Moment.' }, { status: 429 })
+  }
+
+  let query = supabase
     .from('zeiteintraege')
     .select(
-      `id, datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden, erstellt_am, geaendert_am,
+      `id, datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden, notiz, erstellt_am, geaendert_am,
        taetigkeiten (name),
        kostenstellen (name)`
     )
     .eq('user_id', user.id)
-    .eq('datum', date)
+
+  if (date) {
+    query = query.eq('datum', date)
+  } else {
+    query = query.gte('datum', von!).lte('datum', bis!)
+  }
+
+  const { data, error } = await query
+    .order('datum', { ascending: true })
     .order('erstellt_am', { ascending: true })
-    .limit(100)
+    .limit(date ? 100 : 1000)
 
   if (error) {
     return NextResponse.json({ error: 'Fehler beim Laden der Zeiteinträge' }, { status: 500 })
@@ -62,6 +96,7 @@ export async function GET(request: Request) {
       ? (row.kostenstellen as { name: string }).name
       : '',
     dauer_stunden: row.dauer_stunden,
+    notiz: row.notiz ?? null,
     erstellt_am: row.erstellt_am,
     geaendert_am: row.geaendert_am,
   }))
@@ -97,7 +132,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: firstError }, { status: 400 })
   }
 
-  const { datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden } = parsed.data
+  const { datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden, notiz } = parsed.data
 
   // Exactly one of taetigkeit_id or taetigkeit_freitext must be set
   const hasTaetigkeitId = !!taetigkeit_id
@@ -121,6 +156,7 @@ export async function POST(request: Request) {
       taetigkeit_freitext: hasFreitext ? taetigkeit_freitext!.trim() : null,
       kostenstelle_id,
       dauer_stunden,
+      notiz: notiz?.trim() || null,
     })
     .select('id')
     .single()

@@ -7,6 +7,7 @@ export interface Zeiteintrag {
   kostenstelle_id: string
   kostenstelle_name: string
   dauer_stunden: number
+  notiz: string | null
   erstellt_am: string
   geaendert_am: string
 }
