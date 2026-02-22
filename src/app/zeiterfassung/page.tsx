@@ -191,7 +191,7 @@ export default function ZeiterfassungPage() {
 
       {/* Floating action button (fixed bottom on mobile) */}
       {!noKostenstellen && (
-        <div className="fixed bottom-6 right-4 sm:right-6">
+        <div className="fixed bottom-24 right-4 sm:right-6 md:bottom-6">
           <Button
             size="lg"
             onClick={openCreate}

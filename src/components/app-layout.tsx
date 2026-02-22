@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { BottomNav } from '@/components/bottom-nav'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -34,7 +35,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     setLoggingOut(true)
     try {
       const supabase = createClient()
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'global' })
+      document.cookie = 'hofzeit_remember_me=; max-age=0; path=/; Secure'
       window.location.href = '/login'
     } finally {
       setLoggingOut(false)
@@ -45,11 +47,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Desktop header with full navigation */}
       <header className="border-b bg-background">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2 sm:gap-6">
             <h1 className="text-lg font-bold shrink-0">Hofzeit</h1>
-            <nav className="flex items-center gap-0.5 sm:gap-1">
+            <nav className="hidden md:flex items-center gap-0.5 sm:gap-1">
               <Link
                 href="/dashboard"
                 className={cn(
@@ -70,8 +73,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
-                <span className="sm:hidden">Zeit</span>
-                <span className="hidden sm:inline">Zeiterfassung</span>
+                Zeiterfassung
               </Link>
               <Link
                 href="/abwesenheiten"
@@ -82,8 +84,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
-                <span className="sm:hidden">Abwes.</span>
-                <span className="hidden sm:inline">Abwesenheiten</span>
+                Abwesenheiten
               </Link>
               <Link
                 href="/stammdaten"
@@ -94,8 +95,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
-                <span className="sm:hidden">Daten</span>
-                <span className="hidden sm:inline">Stammdaten</span>
+                Stammdaten
               </Link>
               <Link
                 href="/export"
@@ -106,8 +106,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
-                <span className="sm:hidden">PDF</span>
-                <span className="hidden sm:inline">Export</span>
+                Export
               </Link>
               {isAdmin && (
                 <Link
@@ -119,8 +118,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   )}
                 >
-                  <span className="sm:hidden">Admin</span>
-                  <span className="hidden sm:inline">Verwaltung</span>
+                  Verwaltung
                 </Link>
               )}
             </nav>
@@ -136,17 +134,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               size="sm"
               onClick={handleLogout}
               disabled={loggingOut}
+              className="hidden md:inline-flex"
             >
               {loggingOut ? '...' : 'Abmelden'}
             </Button>
           </div>
         </div>
       </header>
-      <main className="flex-1 p-4">
+
+      {/* Main content with bottom padding on mobile for BottomNav */}
+      <main className="flex-1 p-4 pb-20 md:pb-4">
         <div className="max-w-4xl mx-auto">
           {children}
         </div>
       </main>
+
+      {/* Mobile bottom navigation */}
+      <BottomNav
+        isAdmin={isAdmin}
+        onLogout={handleLogout}
+        loggingOut={loggingOut}
+      />
     </div>
   )
 }

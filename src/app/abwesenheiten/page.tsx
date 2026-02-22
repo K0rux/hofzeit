@@ -193,7 +193,7 @@ export default function AbwesenheitenPage() {
       </div>
 
       {/* Floating action button */}
-      <div className="fixed bottom-6 right-4 sm:right-6">
+      <div className="fixed bottom-24 right-4 sm:right-6 md:bottom-6">
         <Button
           size="lg"
           onClick={openCreate}
