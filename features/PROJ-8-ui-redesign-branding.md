@@ -1,6 +1,6 @@
 # PROJ-8: UI/UX Redesign & Branding
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-22
 **Last Updated:** 2026-02-22
 
@@ -266,4 +266,14 @@ Keine – alle benötigten Tools sind bereits installiert (shadcn/ui, Tailwind C
 - **Recommendation:** Deployment freigegeben.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-23
+**Production URL:** https://hofzeit.vercel.app
+**Git Tag:** v1.8.0-PROJ-8
+**Commit:** feat(PROJ-8): Implement UI/UX Redesign & Branding
+
+### Deployment Notes
+- Pure UI/CSS changes — no database migrations required
+- No new environment variables
+- Vercel auto-deployed via push to `main` branch
+- Build time: ~14s (Turbopack)
