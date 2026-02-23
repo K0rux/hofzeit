@@ -19,7 +19,7 @@ export function AbwesenheitBanner({ abwesenheiten }: AbwesenheitBannerProps) {
           className={
             a.typ === 'urlaub'
               ? 'rounded-md bg-emerald-50 border border-emerald-200 p-3 flex items-center gap-2'
-              : 'rounded-md bg-orange-50 border border-orange-200 p-3 flex items-center gap-2'
+              : 'rounded-md bg-red-50 border border-red-200 p-3 flex items-center gap-2'
           }
         >
           <Badge
@@ -27,7 +27,7 @@ export function AbwesenheitBanner({ abwesenheiten }: AbwesenheitBannerProps) {
             className={
               a.typ === 'urlaub'
                 ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                : 'bg-orange-100 text-orange-700 hover:bg-orange-100'
+                : 'bg-red-100 text-red-700 hover:bg-red-100'
             }
           >
             {typLabel(a.typ)}
@@ -36,7 +36,7 @@ export function AbwesenheitBanner({ abwesenheiten }: AbwesenheitBannerProps) {
             className={
               a.typ === 'urlaub'
                 ? 'text-sm text-emerald-800'
-                : 'text-sm text-orange-800'
+                : 'text-sm text-red-800'
             }
           >
             Für diesen Tag ist {typLabel(a.typ)} eingetragen

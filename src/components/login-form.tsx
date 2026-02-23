@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -51,65 +52,79 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Hofzeit</CardTitle>
-        <CardDescription>Zeiterfassung Bauhof</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-Mail-Adresse</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@gemeinde.de"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              aria-describedby={error ? 'login-error' : undefined}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Passwort</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              aria-describedby={error ? 'login-error' : undefined}
-            />
-          </div>
+    <div className="w-full max-w-sm animate-slide-up">
+      <div className="flex flex-col items-center mb-8">
+        <Image
+          src="/hofzeit_logo.png"
+          alt="Hofzeit Logo"
+          width={80}
+          height={80}
+          className="h-20 w-20 mb-4"
+          priority
+        />
+        <h1 className="text-2xl font-bold text-primary">Hofzeit</h1>
+        <p className="text-sm text-muted-foreground mt-1">Zeiterfassung Bauhof</p>
+      </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="remember-me"
-              checked={rememberMe}
-              onCheckedChange={(checked) => setRememberMe(checked === true)}
-            />
-            <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
-              Eingeloggt bleiben (30 Tage)
-            </Label>
-          </div>
+      <Card>
+        <CardHeader className="text-center pb-2">
+          <h2 className="text-lg font-semibold">Anmelden</h2>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-Mail-Adresse</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@gemeinde.de"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                aria-describedby={error ? 'login-error' : undefined}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Passwort</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                aria-describedby={error ? 'login-error' : undefined}
+              />
+            </div>
 
-          {error && (
-            <p id="login-error" className="text-sm text-destructive" role="alert">
-              {error}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="remember-me"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+              />
+              <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
+                Eingeloggt bleiben (30 Tage)
+              </Label>
+            </div>
+
+            {error && (
+              <p id="login-error" className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" className="w-full min-h-[44px]" disabled={loading}>
+              {loading ? 'Anmelden...' : 'Anmelden'}
+            </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              Passwort vergessen? Wenden Sie sich an Ihren Administrator.
             </p>
-          )}
-
-          <Button type="submit" className="w-full min-h-[44px]" disabled={loading}>
-            {loading ? 'Anmelden...' : 'Anmelden'}
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Passwort vergessen? Wenden Sie sich an Ihren Administrator.
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

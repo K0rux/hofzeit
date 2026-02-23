@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { Wrench, Building2 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -158,17 +160,14 @@ export default function StammdatenPage() {
                     ))
                   ) : taetigkeiten.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-8">
-                        <p className="text-muted-foreground">
-                          Noch keine Tätigkeiten angelegt.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className="mt-3"
-                          onClick={() => openCreate('taetigkeit')}
-                        >
-                          Erste Tätigkeit anlegen
-                        </Button>
+                      <TableCell colSpan={3}>
+                        <EmptyState
+                          icon={Wrench}
+                          title="Noch keine Tätigkeiten"
+                          description="Legen Sie Tätigkeiten an, um Zeiteinträge darauf zu buchen."
+                          actionLabel="Erste Tätigkeit anlegen"
+                          onAction={() => openCreate('taetigkeit')}
+                        />
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -240,17 +239,14 @@ export default function StammdatenPage() {
                     ))
                   ) : kostenstellen.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-8">
-                        <p className="text-muted-foreground">
-                          Noch keine Kostenstellen angelegt.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className="mt-3"
-                          onClick={() => openCreate('kostenstelle')}
-                        >
-                          Erste Kostenstelle anlegen
-                        </Button>
+                      <TableCell colSpan={3}>
+                        <EmptyState
+                          icon={Building2}
+                          title="Noch keine Kostenstellen"
+                          description="Legen Sie Kostenstellen an, um Zeiteinträge zuzuordnen."
+                          actionLabel="Erste Kostenstelle anlegen"
+                          onAction={() => openCreate('kostenstelle')}
+                        />
                       </TableCell>
                     </TableRow>
                   ) : (

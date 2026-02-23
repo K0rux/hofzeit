@@ -42,7 +42,7 @@ export function Tagesnavigation({ datum, onDatumChange, abwesenheitTyp }: Tagesn
             <span
               className={cn(
                 'mt-0.5 h-1.5 w-1.5 rounded-full',
-                abwesenheitTyp === 'urlaub' ? 'bg-emerald-500' : 'bg-orange-500'
+                abwesenheitTyp === 'urlaub' ? 'bg-emerald-500' : 'bg-red-500'
               )}
               aria-label={abwesenheitTyp === 'urlaub' ? 'Urlaub' : 'Krankheit'}
             />

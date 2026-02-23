@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Table,
   TableBody,
@@ -117,11 +119,12 @@ export default function AdminPage() {
                 ))
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    Keine Benutzer vorhanden.
+                  <TableCell colSpan={5}>
+                    <EmptyState
+                      icon={Users}
+                      title="Keine Benutzer vorhanden"
+                      description="Legen Sie über 'Neuer Benutzer' die ersten Konten an."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -16,6 +16,11 @@ interface PdfParams {
 
 const WOCHENTAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
 
+// Brand colors from Hofzeit logo
+const COLOR_PRIMARY: [number, number, number] = [27, 79, 138]   // #1B4F8A
+const COLOR_PRIMARY_LIGHT: [number, number, number] = [234, 241, 249] // very light blue for alternating rows
+const COLOR_WHITE: [number, number, number] = [255, 255, 255]
+
 function formatDateDE(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
   return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`
@@ -33,37 +38,86 @@ function formatDauer(dauer: number): string {
   return `${h}:${String(min).padStart(2, '0')}`
 }
 
-export function generatePdf(params: PdfParams) {
+async function loadLogoBase64(): Promise<string | null> {
+  try {
+    const response = await fetch('/hofzeit_logo.png')
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  }
+}
+
+function addPageFooter(doc: jsPDF) {
+  const pageCount = doc.getNumberOfPages()
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(150)
+    doc.text(`Seite ${i} von ${pageCount}`, pageWidth / 2, pageHeight - 8, { align: 'center' })
+  }
+  // Reset text color
+  doc.setTextColor(0)
+}
+
+export async function generatePdf(params: PdfParams) {
   const { userName, zeitraum, eintraege, abwesenheiten, filename } = params
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 14
 
+  // Load logo
+  const logoBase64 = await loadLogoBase64()
+
   // --- Header ---
+  let headerY = 16
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'PNG', margin, headerY - 4, 12, 12)
+  }
+
+  const titleX = logoBase64 ? margin + 15 : margin
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text('Hofzeit \u2013 Zeiterfassung', margin, 20)
+  doc.setTextColor(...COLOR_PRIMARY)
+  doc.text('Hofzeit \u2013 Zeiterfassung', titleX, headerY + 4)
 
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Mitarbeiter: ${userName}`, margin, 28)
-  doc.text(`Zeitraum: ${zeitraum}`, margin, 34)
+  doc.setTextColor(80)
+  doc.text(`Mitarbeiter: ${userName}`, margin, headerY + 14)
+  doc.text(`Zeitraum: ${zeitraum}`, margin, headerY + 20)
 
   const erstelltAm = new Date().toLocaleDateString('de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   })
-  doc.text(`Erstellt am: ${erstelltAm}`, pageWidth - margin, 28, { align: 'right' })
+  doc.text(`Erstellt am: ${erstelltAm}`, pageWidth - margin, headerY + 14, { align: 'right' })
 
-  let yPos = 42
+  // Separator line
+  doc.setDrawColor(...COLOR_PRIMARY)
+  doc.setLineWidth(0.5)
+  doc.line(margin, headerY + 24, pageWidth - margin, headerY + 24)
+
+  doc.setTextColor(0)
+  let yPos = headerY + 30
 
   // --- Zeiteintraege Tabelle ---
   if (eintraege.length > 0) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...COLOR_PRIMARY)
     doc.text('Zeiteintr\u00e4ge', margin, yPos)
+    doc.setTextColor(0)
     yPos += 2
 
     const zeitRows = eintraege.map((e) => [
@@ -81,7 +135,9 @@ export function generatePdf(params: PdfParams) {
       body: zeitRows,
       margin: { left: margin, right: margin },
       styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 37, 36], textColor: 255, fontStyle: 'bold' },
+      headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: COLOR_PRIMARY_LIGHT },
+      bodyStyles: { fillColor: COLOR_WHITE },
       columnStyles: {
         0: { cellWidth: 22 },
         1: { cellWidth: 24 },
@@ -97,7 +153,6 @@ export function generatePdf(params: PdfParams) {
 
   // --- Abwesenheiten Tabelle ---
   if (abwesenheiten.length > 0) {
-    // Check if we need a new page
     if (yPos > 240) {
       doc.addPage()
       yPos = 20
@@ -105,7 +160,9 @@ export function generatePdf(params: PdfParams) {
 
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...COLOR_PRIMARY)
     doc.text('Abwesenheiten', margin, yPos)
+    doc.setTextColor(0)
     yPos += 2
 
     const abwRows = abwesenheiten.map((a) => [
@@ -122,7 +179,9 @@ export function generatePdf(params: PdfParams) {
       body: abwRows,
       margin: { left: margin, right: margin },
       styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 37, 36], textColor: 255, fontStyle: 'bold' },
+      headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: COLOR_PRIMARY_LIGHT },
+      bodyStyles: { fillColor: COLOR_WHITE },
       columnStyles: {
         0: { cellWidth: 22 },
         1: { cellWidth: 22 },
@@ -143,7 +202,9 @@ export function generatePdf(params: PdfParams) {
 
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLOR_PRIMARY)
   doc.text('Zusammenfassung', margin, yPos)
+  doc.setTextColor(0)
   yPos += 6
 
   const summaryRows: string[][] = []
@@ -151,34 +212,6 @@ export function generatePdf(params: PdfParams) {
   // Gesamtstunden
   const gesamtStunden = eintraege.reduce((sum, e) => sum + e.dauer_stunden, 0)
   summaryRows.push(['Gesamtarbeitsstunden', formatDauer(gesamtStunden)])
-
-  // Stunden je Tätigkeit
-  const stundenProTaetigkeit = new Map<string, number>()
-  for (const e of eintraege) {
-    const name = e.taetigkeit_name ?? e.taetigkeit_freitext ?? 'Ohne T\u00e4tigkeit'
-    stundenProTaetigkeit.set(name, (stundenProTaetigkeit.get(name) ?? 0) + e.dauer_stunden)
-  }
-  if (stundenProTaetigkeit.size > 0) {
-    summaryRows.push(['', ''])
-    summaryRows.push(['Stunden je T\u00e4tigkeit', ''])
-    for (const [name, stunden] of stundenProTaetigkeit) {
-      summaryRows.push([`  ${name}`, formatDauer(stunden)])
-    }
-  }
-
-  // Stunden je Kostenstelle
-  const stundenProKostenstelle = new Map<string, number>()
-  for (const e of eintraege) {
-    const name = e.kostenstelle_name || 'Ohne Kostenstelle'
-    stundenProKostenstelle.set(name, (stundenProKostenstelle.get(name) ?? 0) + e.dauer_stunden)
-  }
-  if (stundenProKostenstelle.size > 0) {
-    summaryRows.push(['', ''])
-    summaryRows.push(['Stunden je Kostenstelle', ''])
-    for (const [name, stunden] of stundenProKostenstelle) {
-      summaryRows.push([`  ${name}`, formatDauer(stunden)])
-    }
-  }
 
   // Urlaubs- und Krankheitstage
   const urlaubTage = abwesenheiten
@@ -203,6 +236,9 @@ export function generatePdf(params: PdfParams) {
     },
     theme: 'plain',
   })
+
+  // --- Page Footer ---
+  addPageFooter(doc)
 
   // --- Save ---
   doc.save(filename)

@@ -152,7 +152,7 @@ export default function ExportPage() {
       const nachname = nameParts[nameParts.length - 1] || 'export'
       const filename = `hofzeit-export-${nachname.toLowerCase()}-${jahr}-${monat}.pdf`
 
-      generatePdf({
+      await generatePdf({
         userName,
         zeitraum,
         monat,

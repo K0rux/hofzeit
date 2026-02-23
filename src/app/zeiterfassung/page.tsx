@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { Clock } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Tagesnavigation } from '@/components/zeiterfassung/tagesnavigation'
 import { ZeiteintragKarte } from '@/components/zeiterfassung/zeiteintrag-karte'
 import { ZeiteintragFormDialog } from '@/components/zeiterfassung/zeiteintrag-form-dialog'
@@ -168,14 +170,13 @@ export default function ZeiterfassungPage() {
               </div>
             ))
           ) : eintraege.length === 0 ? (
-            <div className="rounded-md border border-dashed p-8 text-center">
-              <p className="text-muted-foreground">Noch keine Einträge für diesen Tag.</p>
-              {!noKostenstellen && (
-                <Button variant="outline" className="mt-3" onClick={openCreate}>
-                  Ersten Eintrag anlegen
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={Clock}
+              title="Noch keine Einträge"
+              description="Für diesen Tag wurden noch keine Arbeitszeiten erfasst."
+              actionLabel={noKostenstellen ? undefined : 'Ersten Eintrag anlegen'}
+              onAction={noKostenstellen ? undefined : openCreate}
+            />
           ) : (
             eintraege.map((eintrag) => (
               <ZeiteintragKarte

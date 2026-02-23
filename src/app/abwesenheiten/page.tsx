@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { CalendarDays } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { AbwesenheitFormDialog } from '@/components/abwesenheiten/abwesenheit-form-dialog'
 import { AbwesenheitLoeschenDialog } from '@/components/abwesenheiten/abwesenheit-loeschen-dialog'
 import type { Abwesenheit } from '@/components/abwesenheiten/types'
@@ -102,7 +104,7 @@ export default function AbwesenheitenPage() {
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">Krankheitstage {currentYear}</p>
-                <p className="text-2xl font-bold text-orange-500">{krankheitsTage}</p>
+                <p className="text-2xl font-bold text-red-500">{krankheitsTage}</p>
               </CardContent>
             </Card>
           </div>
@@ -125,12 +127,13 @@ export default function AbwesenheitenPage() {
               </div>
             ))
           ) : abwesenheiten.length === 0 ? (
-            <div className="rounded-md border border-dashed p-8 text-center">
-              <p className="text-muted-foreground">Noch keine Abwesenheiten eingetragen.</p>
-              <Button variant="outline" className="mt-3" onClick={openCreate}>
-                Erste Abwesenheit eintragen
-              </Button>
-            </div>
+            <EmptyState
+              icon={CalendarDays}
+              title="Noch keine Abwesenheiten"
+              description="Sie haben noch keine Urlaubs- oder Krankheitstage eingetragen."
+              actionLabel="Erste Abwesenheit eintragen"
+              onAction={openCreate}
+            />
           ) : (
             abwesenheiten.map((item) => {
               const tage = berechneAnzahlTage(item.startdatum, item.enddatum)
@@ -145,7 +148,7 @@ export default function AbwesenheitenPage() {
                             className={
                               item.typ === 'urlaub'
                                 ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                : 'bg-orange-100 text-orange-700 hover:bg-orange-100'
+                                : 'bg-red-100 text-red-700 hover:bg-red-100'
                             }
                           >
                             {typLabel(item.typ)}
