@@ -28,6 +28,7 @@ import { PasswortResetDialog } from '@/components/admin/passwort-reset-dialog'
 import { RolleAendernDialog } from '@/components/admin/rolle-aendern-dialog'
 import { DeaktivierenDialog } from '@/components/admin/deaktivieren-dialog'
 import { AktivierenDialog } from '@/components/admin/aktivieren-dialog'
+import { BerichtDialog } from '@/components/admin/bericht-dialog'
 
 export default function AdminPage() {
   const [users, setUsers] = useState<UserProfile[]>([])
@@ -41,6 +42,7 @@ export default function AdminPage() {
   const [roleChangeUser, setRoleChangeUser] = useState<UserProfile | null>(null)
   const [deactivateUser, setDeactivateUser] = useState<UserProfile | null>(null)
   const [activateUser, setActivateUser] = useState<UserProfile | null>(null)
+  const [berichtUser, setBerichtUser] = useState<UserProfile | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setError(null)
@@ -158,6 +160,11 @@ export default function AdminPage() {
                             Passwort zurücksetzen
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            onClick={() => setBerichtUser(user)}
+                          >
+                            Bericht herunterladen
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
                             onClick={() => setRoleChangeUser(user)}
                             disabled={user.id === currentUserId}
                           >
@@ -220,6 +227,11 @@ export default function AdminPage() {
         onOpenChange={(open) => !open && setActivateUser(null)}
         user={activateUser}
         onSuccess={handleSuccess}
+      />
+      <BerichtDialog
+        open={!!berichtUser}
+        onOpenChange={(open) => !open && setBerichtUser(null)}
+        user={berichtUser}
       />
     </AppLayout>
   )

@@ -38,5 +38,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-#mcp file
+# mcp file
 .mcp.json
+
+# DB Schema
+supabase_schema_export.sql
+
+# Local Cert
+Defort_CA.crt

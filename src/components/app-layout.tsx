@@ -46,14 +46,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isAdmin = userRole === 'admin'
 
-  const navLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/zeiterfassung', label: 'Zeiterfassung' },
-    { href: '/abwesenheiten', label: 'Abwesenheiten' },
-    { href: '/stammdaten', label: 'Stammdaten' },
-    { href: '/export', label: 'Export' },
-    ...(isAdmin ? [{ href: '/admin', label: 'Verwaltung' }] : []),
-  ]
+  const navLinks = isAdmin
+    ? [
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/abwesenheiten', label: 'Abwesenheiten' },
+        { href: '/stammdaten', label: 'Stammdaten' },
+        { href: '/admin', label: 'Verwaltung' },
+      ]
+    : [
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/zeiterfassung', label: 'Zeiterfassung' },
+        { href: '/abwesenheiten', label: 'Abwesenheiten' },
+        { href: '/stammdaten', label: 'Stammdaten' },
+        { href: '/export', label: 'Export' },
+      ]
 
   return (
     <div className="min-h-screen flex flex-col">

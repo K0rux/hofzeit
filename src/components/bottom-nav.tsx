@@ -14,17 +14,23 @@ interface BottomNavProps {
   loggingOut: boolean
 }
 
-const tabs = [
+const employeeTabs = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/zeiterfassung', label: 'Zeiten', icon: Clock },
   { href: '/abwesenheiten', label: 'Abwesend', icon: CalendarDays },
   { href: '/export', label: 'Export', icon: Download },
 ]
 
+const adminTabs = [
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
+  { href: '/abwesenheiten', label: 'Abwesend', icon: CalendarDays },
+]
+
 export function BottomNav({ isAdmin, onLogout, loggingOut }: BottomNavProps) {
   const pathname = usePathname()
   const [sheetOpen, setSheetOpen] = useState(false)
 
+  const tabs = isAdmin ? adminTabs : employeeTabs
   const isMoreActive = pathname === '/stammdaten' || pathname?.startsWith('/admin')
 
   return (

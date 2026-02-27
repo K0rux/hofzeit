@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Wrench, Building2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -20,6 +21,8 @@ import { LoeschenDialog } from '@/components/stammdaten/loeschen-dialog'
 import type { Taetigkeit, Kostenstelle } from '@/components/stammdaten/types'
 
 export default function StammdatenPage() {
+  const [isAdmin, setIsAdmin] = useState(false)
+
   // Tätigkeiten state
   const [taetigkeiten, setTaetigkeiten] = useState<Taetigkeit[]>([])
   const [loadingT, setLoadingT] = useState(true)
@@ -77,6 +80,19 @@ export default function StammdatenPage() {
   }, [])
 
   useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => {
+            setIsAdmin(data?.role === 'admin')
+          })
+      }
+    })
     fetchTaetigkeiten()
     fetchKostenstellen()
   }, [fetchTaetigkeiten, fetchKostenstellen])
@@ -207,11 +223,13 @@ export default function StammdatenPage() {
 
           {/* Kostenstellen Tab */}
           <TabsContent value="kostenstellen" className="space-y-4">
-            <div className="flex justify-end">
-              <Button onClick={() => openCreate('kostenstelle')}>
-                Neue Kostenstelle
-              </Button>
-            </div>
+            {isAdmin && (
+              <div className="flex justify-end">
+                <Button onClick={() => openCreate('kostenstelle')}>
+                  Neue Kostenstelle
+                </Button>
+              </div>
+            )}
 
             {errorK && (
               <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
@@ -225,7 +243,9 @@ export default function StammdatenPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead className="hidden sm:table-cell">Nummer / Code</TableHead>
-                    <TableHead className="text-right">Aktionen</TableHead>
+                    {isAdmin && (
+                      <TableHead className="text-right">Aktionen</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -234,18 +254,23 @@ export default function StammdatenPage() {
                       <TableRow key={i}>
                         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                        {isAdmin && (
+                          <TableCell><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                        )}
                       </TableRow>
                     ))
                   ) : kostenstellen.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3}>
+                      <TableCell colSpan={isAdmin ? 3 : 2}>
                         <EmptyState
                           icon={Building2}
                           title="Noch keine Kostenstellen"
-                          description="Legen Sie Kostenstellen an, um Zeiteinträge zuzuordnen."
-                          actionLabel="Erste Kostenstelle anlegen"
-                          onAction={() => openCreate('kostenstelle')}
+                          description={isAdmin
+                            ? "Legen Sie Kostenstellen an, um Zeiteinträge zuzuordnen."
+                            : "Es wurden noch keine Kostenstellen vom Admin angelegt."
+                          }
+                          actionLabel={isAdmin ? "Erste Kostenstelle anlegen" : undefined}
+                          onAction={isAdmin ? () => openCreate('kostenstelle') : undefined}
                         />
                       </TableCell>
                     </TableRow>
@@ -256,26 +281,28 @@ export default function StammdatenPage() {
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {k.nummer || '–'}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="min-h-[44px]"
-                              onClick={() => openEdit('kostenstelle', k)}
-                            >
-                              Bearbeiten
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="min-h-[44px] text-destructive hover:text-destructive"
-                              onClick={() => openDelete('kostenstelle', k.id, k.name)}
-                            >
-                              Löschen
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="min-h-[44px]"
+                                onClick={() => openEdit('kostenstelle', k)}
+                              >
+                                Bearbeiten
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="min-h-[44px] text-destructive hover:text-destructive"
+                                onClick={() => openDelete('kostenstelle', k.id, k.name)}
+                              >
+                                Löschen
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}

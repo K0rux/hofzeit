@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
+import { verifyAdmin } from '@/lib/admin-auth'
 
 const createSchema = z.object({
   name: z
@@ -15,7 +16,7 @@ const createSchema = z.object({
     .default(''),
 })
 
-// GET /api/kostenstellen – List user's Kostenstellen (alphabetically)
+// GET /api/kostenstellen – List all Kostenstellen (alphabetically)
 export async function GET() {
   const supabase = await createClient()
   const {
@@ -29,7 +30,6 @@ export async function GET() {
   const { data, error } = await supabase
     .from('kostenstellen')
     .select('id, name, nummer, created_at, updated_at')
-    .eq('user_id', user.id)
     .order('name', { ascending: true })
     .limit(500)
 
@@ -43,16 +43,10 @@ export async function GET() {
   return NextResponse.json(data)
 }
 
-// POST /api/kostenstellen – Create a new Kostenstelle
+// POST /api/kostenstellen – Create a new Kostenstelle (Admin only)
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
-  }
+  const auth = await verifyAdmin()
+  if ('error' in auth) return auth.error
 
   let body: unknown
   try {
@@ -69,9 +63,14 @@ export async function POST(request: Request) {
 
   const { name, nummer } = parsed.data
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   const { data, error } = await supabase
     .from('kostenstellen')
-    .insert({ user_id: user.id, name, nummer: nummer || null })
+    .insert({ user_id: user!.id, name, nummer: nummer || null })
     .select('id, name, nummer, created_at, updated_at')
     .single()
 

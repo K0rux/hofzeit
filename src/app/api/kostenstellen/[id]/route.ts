@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
+import { verifyAdmin } from '@/lib/admin-auth'
 
 const updateSchema = z.object({
   name: z
@@ -17,7 +18,7 @@ const updateSchema = z.object({
 
 const uuidSchema = z.string().uuid()
 
-// PATCH /api/kostenstellen/[id] – Update a Kostenstelle
+// PATCH /api/kostenstellen/[id] – Update a Kostenstelle (Admin only)
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -28,14 +29,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Ungültige ID' }, { status: 400 })
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
-  }
+  const auth = await verifyAdmin()
+  if ('error' in auth) return auth.error
 
   let body: unknown
   try {
@@ -52,11 +47,11 @@ export async function PATCH(
 
   const { name, nummer } = parsed.data
 
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('kostenstellen')
     .update({ name, nummer: nummer || null })
     .eq('id', id)
-    .eq('user_id', user.id)
     .select('id, name, nummer, created_at, updated_at')
     .single()
 
@@ -82,7 +77,7 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// DELETE /api/kostenstellen/[id] – Delete a Kostenstelle
+// DELETE /api/kostenstellen/[id] – Delete a Kostenstelle (Admin only)
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -93,20 +88,35 @@ export async function DELETE(
     return NextResponse.json({ error: 'Ungültige ID' }, { status: 400 })
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const auth = await verifyAdmin()
+  if ('error' in auth) return auth.error
 
-  if (!user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+  const supabase = await createClient()
+
+  // Check if Kostenstelle is used in Zeiteinträge
+  const { count, error: countError } = await supabase
+    .from('zeiteintraege')
+    .select('id', { count: 'exact', head: true })
+    .eq('kostenstelle_id', id)
+
+  if (countError) {
+    return NextResponse.json(
+      { error: 'Fehler beim Prüfen der Verwendung' },
+      { status: 500 }
+    )
+  }
+
+  if (count && count > 0) {
+    return NextResponse.json(
+      { error: `Kostenstelle wird in ${count} Einträgen verwendet und kann nicht gelöscht werden` },
+      { status: 409 }
+    )
   }
 
   const { error } = await supabase
     .from('kostenstellen')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id)
 
   if (error) {
     return NextResponse.json(
