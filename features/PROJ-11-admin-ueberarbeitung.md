@@ -65,7 +65,114 @@ Der Admin-Bereich wird funktional überarbeitet: Zeiterfassung und PDF-Export we
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Überblick: 4 Änderungsbereiche
+
+1. **Rollenbasierte Navigation** – Zeiterfassung & Export für Admins ausblenden
+2. **Kostenstellen: Admin-only Schreibzugriff** – RLS + API anpassen
+3. **Stammdaten-Seite: Rollenabhängige UI** – Mitarbeiter sehen Kostenstellen nur lesend
+4. **Admin: Mitarbeiter-Berichte als PDF** – Neuer Dialog + neuer API-Endpunkt
+
+---
+
+### A) Komponentenstruktur
+
+```
+Navigation – app-layout.tsx + bottom-nav.tsx
++-- navLinks / tabs werden nach Rolle gefiltert:
+    [Admin sieht]:      Dashboard, Abwesenheiten, Stammdaten, Verwaltung
+    [Mitarbeiter sieht]: Dashboard, Zeiterfassung, Abwesenheiten, Stammdaten, Export
+
+Admin-Seite – /admin/page.tsx
++-- Benutzerverwaltung-Tabelle (unverändert)
+    +-- Dropdown pro Zeile
+        +-- Passwort zurücksetzen (unverändert)
+        +-- Rolle ändern (unverändert)
+        +-- Deaktivieren / Reaktivieren (unverändert)
+        +-- [NEU] "Bericht herunterladen"
+
+[NEU] BerichtDialog – src/components/admin/bericht-dialog.tsx
++-- Mitarbeitername (nur anzeigen)
++-- Monats-Auswahl (1–12)
++-- Jahres-Auswahl (aktuelles ± 1 Jahr)
++-- "PDF herunterladen" Button
+    → Ruft neuen API-Endpunkt auf → PDF wird client-seitig erzeugt
+    → Hinweis-Banner wenn keine Einträge vorhanden (kein leeres PDF)
+    → "Monat noch offen"-Hinweis wenn Monat = aktueller Monat
+
+Stammdaten-Seite – /stammdaten/page.tsx
++-- Tätigkeiten-Tab – keine Änderung (alle Nutzer verwalten eigene)
++-- Kostenstellen-Tab
+    [Admin]:      "Neue Kostenstelle" + Bearbeiten/Löschen-Buttons (unverändert)
+    [Mitarbeiter]: Nur lesbare Liste (keine Buttons, keine Aktionsspalte)
+```
+
+---
+
+### B) Datenmodell
+
+Keine neuen Tabellen. Nur RLS-Anpassungen an der bestehenden `kostenstellen`-Tabelle.
+
+```
+Tabelle: kostenstellen (Struktur unverändert)
+- id, user_id, name, nummer, created_at, updated_at
+
+Aktuell:  jeder Nutzer sieht nur eigene Kostenstellen (user_id-Filter)
+Neu:      alle authentifizierten Nutzer können LESEN
+          nur Admin kann ANLEGEN / BEARBEITEN / LÖSCHEN
+```
+
+Die Spalte `user_id` bleibt für historische Nachvollziehbarkeit, wird aber nicht mehr als Zugriffsfilter verwendet.
+
+---
+
+### C) API-Änderungen
+
+| Endpunkt | Änderung |
+|----------|----------|
+| `GET /api/kostenstellen` | `user_id`-Filter entfernen – alle Kostenstellen für alle eingeloggten Nutzer |
+| `POST /api/kostenstellen` | Admin-Rollenprüfung hinzufügen → 403 für Mitarbeiter |
+| `PUT /api/kostenstellen/[id]` | Admin-Rollenprüfung hinzufügen → 403 für Mitarbeiter |
+| `DELETE /api/kostenstellen/[id]` | Admin-Rollenprüfung hinzufügen → 403 für Mitarbeiter |
+| **[NEU]** `GET /api/admin/berichte/[userId]?monat=X&jahr=Y` | Admin-only: liefert Zeiteinträge + Abwesenheiten + Name eines Mitarbeiters als JSON |
+
+Der bestehende `pdf-generator.ts` wird unverändert wiederverwendet – der Admin-Browser generiert das PDF lokal aus den API-Daten.
+
+---
+
+### D) Datenbankänderungen (nur RLS, keine Schema-Migration)
+
+Nur die Row Level Security Policies der `kostenstellen`-Tabelle werden angepasst:
+
+| Operation | Aktuell | Neu |
+|-----------|---------|-----|
+| SELECT | Nur eigene Zeilen (`user_id = auth.uid()`) | Alle authentifizierten Nutzer |
+| INSERT | Nur eigene Zeilen | Nur Admin-Rolle |
+| UPDATE | Nur eigene Zeilen | Nur Admin-Rolle |
+| DELETE | Nur eigene Zeilen | Nur Admin-Rolle |
+
+---
+
+### E) Neue Dateien
+
+| Datei | Zweck |
+|-------|-------|
+| `src/components/admin/bericht-dialog.tsx` | Monats-/Jahresauswahl + PDF-Download-Trigger |
+| `src/app/api/admin/berichte/[userId]/route.ts` | Admin-only API: Mitarbeiterdaten für PDF-Generierung |
+
+**Geänderte Dateien:**
+- `src/components/app-layout.tsx` – rollengefilterter navLinks-Array
+- `src/components/bottom-nav.tsx` – rollengefilterter tabs-Array
+- `src/app/admin/page.tsx` – "Bericht herunterladen" Aktion + BerichtDialog
+- `src/app/stammdaten/page.tsx` – rollenabhängiger Kostenstellen-Tab
+- `src/app/api/kostenstellen/route.ts` – user_id-Filter entfernen; Admin-Prüfung für POST
+- `src/app/api/kostenstellen/[id]/route.ts` – Admin-Prüfung für PUT + DELETE
+
+---
+
+### F) Keine neuen npm-Pakete erforderlich
+
+Alle benötigten Bibliotheken (jsPDF, jspdf-autotable, shadcn/ui, Supabase) sind bereits installiert.
 
 ## QA Test Results
 _To be added by /qa_
