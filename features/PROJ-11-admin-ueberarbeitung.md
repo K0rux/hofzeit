@@ -273,4 +273,8 @@ Alle benötigten Bibliotheken (jsPDF, jspdf-autotable, shadcn/ui, Supabase) sind
 - **Production Ready:** YES
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-27
+**Production URL:** https://hofzeit.vercel.app
+**Commit:** `3bd33b1` feat(PROJ-11): Implement Admin-Bereich Überarbeitung
+**Git Tag:** v1.11.0-PROJ-11

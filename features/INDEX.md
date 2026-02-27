@@ -22,7 +22,7 @@
 | PROJ-8 | UI/UX Redesign & Branding | Deployed | [PROJ-8-ui-redesign-branding.md](PROJ-8-ui-redesign-branding.md) | 2026-02-22 |
 | PROJ-9 | Mitarbeiter-Arbeitszeitprofil | Planned | [PROJ-9-arbeitszeitprofil.md](PROJ-9-arbeitszeitprofil.md) | 2026-02-22 |
 | PROJ-10 | Monatsabschluss | Planned | [PROJ-10-monatsabschluss.md](PROJ-10-monatsabschluss.md) | 2026-02-22 |
-| PROJ-11 | Admin-Bereich Überarbeitung | In Review | [PROJ-11-admin-ueberarbeitung.md](PROJ-11-admin-ueberarbeitung.md) | 2026-02-22 |
+| PROJ-11 | Admin-Bereich Überarbeitung | Deployed | [PROJ-11-admin-ueberarbeitung.md](PROJ-11-admin-ueberarbeitung.md) | 2026-02-22 |
 
 <!-- Add features above this line -->
 
