@@ -1,6 +1,6 @@
 # PROJ-10: Monatsabschluss
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-22
 **Last Updated:** 2026-02-28
 
@@ -307,4 +307,10 @@ One addition: `vercel.json` extended with cron schedule definition.
 - **Production Ready:** YES — all bugs resolved
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-28
+**Production URL:** https://hofzeit.vercel.app
+**Commit:** `feat(PROJ-10): Implement Monatsabschluss`
+**DB Migrations applied:**
+- `create_monatsabschluesse` (2026-02-28)
+- `fix_rls_update_policies_closed_months` (2026-02-28)
