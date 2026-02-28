@@ -1,6 +1,6 @@
 # PROJ-9: Mitarbeiter-Arbeitszeitprofil
 
-## Status: In Progress
+## Status: Deployed
 **Created:** 2026-02-22
 **Last Updated:** 2026-02-28
 
@@ -275,4 +275,8 @@ Kein Dot bei: kein Profil vorhanden, kein regulärer Arbeitstag, oder keine Eint
 | PROJ-11 Admin-Bereich-Layout | ✅ Keine Regression |
 
 ## Deployment
-_To be added by /deploy_
+
+**Date:** 2026-02-28
+**Commit:** `feat(PROJ-9): Implement Mitarbeiter-Arbeitszeitprofil`
+**Tag:** `v1.9.0-PROJ-9`
+**Production URL:** https://hofzeit.vercel.app
