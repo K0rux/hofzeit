@@ -1,6 +1,6 @@
 # PROJ-13: UI/Dashboard-Verbesserungen
 
-## Status: Planned
+## Status: Deployed
 **Created:** 2026-02-28
 **Last Updated:** 2026-02-28
 
@@ -157,7 +157,114 @@ E) PDF-Export (export/page.tsx) – CHANGE
 | `src/app/export/page.tsx` | first_name + last_name statt Email für `userName` |
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-02-28
+**Build:** Compiles successfully (npm run build passes)
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### AC-1: Dashboard – Mitarbeiter-Ansicht verbessern
+- [x] WochenstundenKarte zeigt erfasste Ist-Stunden der aktuellen Woche (Mo–So) via `getWochenBounds()` + API-Fetch
+- [x] WochenstundenKarte zeigt Soll-Stunden aus Arbeitszeitprofil (`profil.wochenstunden`)
+- [x] Urlaubskonto zeigt Resturlaub (Jahresanspruch − genommen)
+- [x] Urlaubskonto zeigt Resturlaub als große Zahl mit Untertitel "verbleibende Tage" (BUG-1 behoben)
+- [x] Fallback-Hinweis "Kein Arbeitszeitprofil hinterlegt." wenn kein Profil vorhanden
+- [x] Dashboard-Layout responsiv: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3`
+- [x] Skeleton-Loading-States in allen drei Karten vorhanden
+
+#### AC-2: Dashboard – Admin-Ansicht – Monatsabschluss-Übersicht
+- [x] Bereich "Monatsabschlüsse" mit Vormonat (korrekte Berechnung: Februar → Januar 2026)
+- [x] Name und Status (Offen/Abgeschlossen) pro aktivem Mitarbeiter angezeigt
+- [x] Liste nach Status sortiert (Offene zuerst, dann alphabetisch)
+- [x] "Abschließen"-Button pro offenem Mitarbeiter mit Bestätigungsdialog
+- [x] Erfolgsmeldung "Alle Monatsabschlüsse für [Monat] abgeschlossen" wenn alle erledigt
+- [x] Skeleton-Loading-State vorhanden
+- [x] Leerzustand "Keine aktiven Mitarbeiter vorhanden." behandelt
+
+#### AC-3: Admin-Navigation – Tätigkeiten und Abwesenheiten ausblenden
+- [x] Admin sieht auf `/stammdaten` nur Tab "Kostenstellen" (Tätigkeiten-Tab hidden via `{!isAdmin && ...}`)
+- [x] Admin sieht korrekt nur "Kostenstellen"-Tab (BUG-2 behoben: controlled Tabs via `value`/`onValueChange`)
+- [x] Mitarbeiter sehen weiterhin beide Tabs
+- [x] "Abwesenheiten" aus Admin Desktop-Nav entfernt
+- [x] "Abwesend" aus Admin Mobile-Bottom-Tabs entfernt
+- [x] "Abwesenheiten" nicht im Admin Mobile-Sheet (war nie dort)
+- [x] Mitarbeiter sehen "Abwesenheiten" weiterhin in ihrer Navigation
+- [x] `/abwesenheiten`-Route bleibt für Admins erreichbar (kein 403)
+- [x] Keine API-Änderungen notwendig
+
+#### AC-4: PDF-Report – Name statt E-Mail
+- [x] `export/page.tsx` holt `first_name` + `last_name` aus `profiles`-Tabelle
+- [x] PDF zeigt "Mitarbeiter: Vorname Nachname" statt E-Mail
+- [x] E-Mail erscheint nicht mehr im PDF-Header
+- [x] Fallback auf E-Mail wenn kein Name: `fullName || user.email || ''`
+
+#### AC-5: PWA – Mobile Navigation höher (iPhone Home Indicator)
+- [x] `paddingBottom: env(safe-area-inset-bottom, 0px)` auf Bottom-Nav gesetzt
+- [x] `viewportFit: "cover"` in `layout.tsx` Viewport-Meta hinzugefügt (Voraussetzung für `env()`)
+- [x] Fallback `0px` für Geräte ohne Home Indicator
+- [x] Vorherige feste `pb-5` entfernt, durch dynamisches `env()` ersetzt
+
+### Edge Cases Status
+
+#### EC-1: Kein Arbeitszeitprofil → Wochenstunden
+- [x] WochenstundenKarte zeigt "Kein Arbeitszeitprofil hinterlegt." (folgt AC, nicht Edge-Case-Text)
+- Hinweis: Edge-Case-Spezifikation sagt "nur Ist-Stunden ohne Soll-Vergleich", AC sagt "Fallback-Hinweis" – Implementierung folgt AC
+
+#### EC-2: Deaktivierte Nutzer in Admin-Übersicht
+- [x] `.filter((u) => u.role === 'employee' && u.is_active)` – korrekt ausgeblendet
+
+#### EC-3: Keine Monatsabschluss-Einträge vorhanden
+- [x] Alle aktiven Mitarbeiter erscheinen mit Status "Offen"
+
+#### EC-4: Admin ruft `/abwesenheiten` direkt auf
+- [x] Seite erreichbar, zeigt leeren Zustand (nutzer-spezifische API)
+
+#### EC-5: PDF ohne Vor-/Nachname
+- [x] Fallback auf E-Mail funktioniert: `fullName || user.email || ''`
+
+#### EC-6: `env(safe-area-inset-bottom)` auf Nicht-iOS
+- [x] Wert ist 0, kein visueller Unterschied
+
+### Security Audit Results
+- [x] Authentication: Admin-API `/api/admin/monatsabschluesse` verwendet `verifyAdmin()` – korrekt geschützt
+- [x] Authorization: Admin-only Endpunkte verwenden Admin-Check, Mitarbeiter-Endpunkte sind user-scoped via RLS
+- [x] Input validation: POST-Body wird mit Zod validiert (`userId: uuid, jahr: int, monat: 1-12`)
+- [x] Business logic: Nur vergangene Monate können abgeschlossen werden (Server-Side Check)
+- [x] Duplicate prevention: Bereits abgeschlossene Monate werden mit 409 abgewiesen
+- [x] Rate limiting: 30 Requests/Minute auf Admin-Write-Endpunkt
+- [x] XSS: Benutzernamen werden über React-JSX gerendert (automatisches Escaping)
+- [x] No secrets exposed: Keine API-Keys oder Credentials im Frontend-Code
+
+### Bugs Found
+
+#### BUG-1: Urlaubskonto-Karte zeigt Resturlaub nicht prominent ✅ BEHOBEN
+- **Severity:** Low
+- **Fix:** `urlaubskonto-karte.tsx` umgebaut – Resturlaub als `text-2xl font-bold` mit Untertitel "verbleibende Tage", Detail-Zeilen (Anspruch/Genommen) in verkleinertem Format darunter.
+
+#### BUG-2: Stammdaten defaultValue Race Condition für Admins ✅ BEHOBEN
+- **Severity:** Medium
+- **Fix:** `Tabs` auf controlled mode umgestellt: neuer `activeTab` State, `setActiveTab` wird nach Rolle-Laden mit korrektem Wert gesetzt; `defaultValue` durch `value`/`onValueChange` ersetzt.
+
+### Summary
+- **Acceptance Criteria:** 22/22 passed
+- **Bugs Found:** 2 total – beide behoben (0 offen)
+- **Security:** Pass – alle Endpunkte korrekt geschützt
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-28
+**Production URL:** https://hofzeit.vercel.app
+**Git Tag:** v1.13.0-PROJ-13
+**Commit:** 2660d92
+
+### Deployed Changes
+- WochenstundenKarte (neue Komponente)
+- AdminMonatsabschlussUebersicht (neue Komponente)
+- UrlaubskontoKarte redesigned
+- Admin-Navigation bereinigt (Abwesenheiten entfernt)
+- Stammdaten role-aware Tabs
+- PDF-Export: Name statt E-Mail
+- Bottom-Nav: iPhone Home Indicator Fix (env safe-area-inset-bottom)
