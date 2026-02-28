@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
+import { istMonatGeschlossen } from '@/lib/monatsabschluss'
 
 const createSchema = z.object({
   datum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ungültiges Datum'),
@@ -133,6 +134,14 @@ export async function POST(request: Request) {
   }
 
   const { datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden, notiz } = parsed.data
+
+  // Check if the month is closed
+  if (await istMonatGeschlossen(supabase, user.id, datum)) {
+    return NextResponse.json(
+      { error: 'Dieser Monat ist abgeschlossen. Einträge können nicht mehr erstellt werden.' },
+      { status: 403 },
+    )
+  }
 
   // Exactly one of taetigkeit_id or taetigkeit_freitext must be set
   const hasTaetigkeitId = !!taetigkeit_id

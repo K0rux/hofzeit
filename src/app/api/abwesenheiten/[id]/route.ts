@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
+import { hatAbwesenheitGeschlosseneMonate } from '@/lib/monatsabschluss'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -60,6 +61,33 @@ export async function PUT(
     )
   }
 
+  // Check if existing absence overlaps a closed month
+  const { data: existing } = await supabase
+    .from('abwesenheiten')
+    .select('startdatum, enddatum')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!existing) {
+    return NextResponse.json({ error: 'Abwesenheit nicht gefunden' }, { status: 404 })
+  }
+
+  if (await hatAbwesenheitGeschlosseneMonate(supabase, user.id, existing.startdatum, existing.enddatum)) {
+    return NextResponse.json(
+      { error: 'Die Abwesenheit überschneidet sich mit einem abgeschlossenen Monat.' },
+      { status: 403 },
+    )
+  }
+
+  // Also check new dates
+  if (await hatAbwesenheitGeschlosseneMonate(supabase, user.id, startdatum, enddatum)) {
+    return NextResponse.json(
+      { error: 'Der neue Zeitraum überschneidet sich mit einem abgeschlossenen Monat.' },
+      { status: 403 },
+    )
+  }
+
   const { data, error } = await supabase
     .from('abwesenheiten')
     .update({
@@ -105,6 +133,25 @@ export async function DELETE(
 
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ error: 'Ungültige ID' }, { status: 400 })
+  }
+
+  // Check if absence overlaps a closed month
+  const { data: entry } = await supabase
+    .from('abwesenheiten')
+    .select('startdatum, enddatum')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!entry) {
+    return NextResponse.json({ error: 'Abwesenheit nicht gefunden' }, { status: 404 })
+  }
+
+  if (await hatAbwesenheitGeschlosseneMonate(supabase, user.id, entry.startdatum, entry.enddatum)) {
+    return NextResponse.json(
+      { error: 'Die Abwesenheit überschneidet sich mit einem abgeschlossenen Monat.' },
+      { status: 403 },
+    )
   }
 
   const { error, count } = await supabase

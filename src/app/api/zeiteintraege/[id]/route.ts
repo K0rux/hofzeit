@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
+import { istMonatGeschlossen } from '@/lib/monatsabschluss'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -55,6 +56,31 @@ export async function PUT(
   }
 
   const { datum, taetigkeit_id, taetigkeit_freitext, kostenstelle_id, dauer_stunden, notiz } = parsed.data
+
+  // Check if the month is closed (for both old and new datum)
+  if (await istMonatGeschlossen(supabase, user.id, datum)) {
+    return NextResponse.json(
+      { error: 'Dieser Monat ist abgeschlossen. Einträge können nicht mehr bearbeitet werden.' },
+      { status: 403 },
+    )
+  }
+
+  // Also check the original entry's month (in case datum changed)
+  const { data: original } = await supabase
+    .from('zeiteintraege')
+    .select('datum')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (original && original.datum !== datum) {
+    if (await istMonatGeschlossen(supabase, user.id, original.datum)) {
+      return NextResponse.json(
+        { error: 'Der ursprüngliche Monat ist abgeschlossen. Der Eintrag kann nicht verschoben werden.' },
+        { status: 403 },
+      )
+    }
+  }
 
   const hasTaetigkeitId = !!taetigkeit_id
   const hasFreitext = !!(taetigkeit_freitext && taetigkeit_freitext.trim())
@@ -116,6 +142,25 @@ export async function DELETE(
 
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ error: 'Ungültige ID' }, { status: 400 })
+  }
+
+  // Check if the entry's month is closed
+  const { data: entry } = await supabase
+    .from('zeiteintraege')
+    .select('datum')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!entry) {
+    return NextResponse.json({ error: 'Zeiteintrag nicht gefunden' }, { status: 404 })
+  }
+
+  if (await istMonatGeschlossen(supabase, user.id, entry.datum)) {
+    return NextResponse.json(
+      { error: 'Dieser Monat ist abgeschlossen. Einträge können nicht mehr gelöscht werden.' },
+      { status: 403 },
+    )
   }
 
   const { error, count } = await supabase

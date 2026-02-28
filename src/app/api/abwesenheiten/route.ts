@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
+import { hatAbwesenheitGeschlosseneMonate } from '@/lib/monatsabschluss'
 
 const createSchema = z.object({
   typ: z.enum(['urlaub', 'krankheit'], {
@@ -102,6 +103,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: 'Enddatum muss gleich oder nach dem Startdatum liegen' },
       { status: 400 }
+    )
+  }
+
+  // Check if any month in the range is closed
+  if (await hatAbwesenheitGeschlosseneMonate(supabase, user.id, startdatum, enddatum)) {
+    return NextResponse.json(
+      { error: 'Der Zeitraum überschneidet sich mit einem abgeschlossenen Monat.' },
+      { status: 403 },
     )
   }
 

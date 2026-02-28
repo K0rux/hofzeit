@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, Lock } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +16,29 @@ import {
   formatZeitraumDE,
   typLabel,
 } from '@/components/abwesenheiten/types'
+import type { Monatsabschluss } from '@/components/monatsabschluss/types'
+
+/** Check if an absence overlaps with any closed month */
+function istAbwesenheitGesperrt(
+  abwesenheit: Abwesenheit,
+  abschluesse: Monatsabschluss[],
+): boolean {
+  if (abschluesse.length === 0) return false
+  const [startY, startM] = abwesenheit.startdatum.split('-').map(Number)
+  const [endY, endM] = abwesenheit.enddatum.split('-').map(Number)
+
+  let y = startY
+  let m = startM
+  while (y < endY || (y === endY && m <= endM)) {
+    if (abschluesse.some((a) => a.jahr === y && a.monat === m)) return true
+    m++
+    if (m > 12) {
+      m = 1
+      y++
+    }
+  }
+  return false
+}
 
 export default function AbwesenheitenPage() {
   const [abwesenheiten, setAbwesenheiten] = useState<Abwesenheit[]>([])
@@ -30,11 +53,18 @@ export default function AbwesenheitenPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteItem, setDeleteItem] = useState<Abwesenheit | null>(null)
 
+  // Monatsabschluesse for write protection
+  const [abschluesse, setAbschluesse] = useState<Monatsabschluss[]>([])
+
   const fetchAbwesenheiten = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/abwesenheiten')
+      const [res, abschlussRes] = await Promise.all([
+        fetch('/api/abwesenheiten'),
+        fetch('/api/monatsabschluesse'),
+      ])
+
       if (!res.ok) {
         const data = await res.json()
         setError(data.error || 'Fehler beim Laden der Abwesenheiten')
@@ -42,6 +72,11 @@ export default function AbwesenheitenPage() {
       }
       const data = await res.json()
       setAbwesenheiten(Array.isArray(data) ? data : [])
+
+      if (abschlussRes.ok) {
+        const abschlussData = await abschlussRes.json()
+        setAbschluesse(Array.isArray(abschlussData) ? abschlussData : [])
+      }
     } catch {
       setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
     } finally {
@@ -137,6 +172,7 @@ export default function AbwesenheitenPage() {
           ) : (
             abwesenheiten.map((item) => {
               const tage = berechneAnzahlTage(item.startdatum, item.enddatum)
+              const gesperrt = istAbwesenheitGesperrt(item, abschluesse)
               return (
                 <Card key={item.id}>
                   <CardContent className="p-4">
@@ -156,6 +192,12 @@ export default function AbwesenheitenPage() {
                           <span className="text-sm text-muted-foreground">
                             {tage} {tage === 1 ? 'Tag' : 'Tage'}
                           </span>
+                          {gesperrt && (
+                            <Badge variant="secondary" className="gap-1">
+                              <Lock className="h-3 w-3" />
+                              Gesperrt
+                            </Badge>
+                          )}
                         </div>
                         <p className="mt-1 text-sm font-medium">
                           {formatZeitraumDE(item.startdatum, item.enddatum)}
@@ -166,26 +208,28 @@ export default function AbwesenheitenPage() {
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="min-h-[44px] min-w-[44px]"
-                          onClick={() => openEdit(item)}
-                          aria-label="Bearbeiten"
-                        >
-                          Bearbeiten
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
-                          onClick={() => openDelete(item)}
-                          aria-label="Löschen"
-                        >
-                          Löschen
-                        </Button>
-                      </div>
+                      {!gesperrt && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="min-h-[44px] min-w-[44px]"
+                            onClick={() => openEdit(item)}
+                            aria-label="Bearbeiten"
+                          >
+                            Bearbeiten
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
+                            onClick={() => openDelete(item)}
+                            aria-label="Löschen"
+                          >
+                            Löschen
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -9,9 +9,10 @@ interface ZeiteintragKarteProps {
   eintrag: Zeiteintrag
   onEdit: (eintrag: Zeiteintrag) => void
   onDelete: (eintrag: Zeiteintrag) => void
+  readonly?: boolean
 }
 
-export function ZeiteintragKarte({ eintrag, onEdit, onDelete }: ZeiteintragKarteProps) {
+export function ZeiteintragKarte({ eintrag, onEdit, onDelete, readonly }: ZeiteintragKarteProps) {
   const taetigkeitLabel = eintrag.taetigkeit_name ?? eintrag.taetigkeit_freitext ?? '–'
   const isFreitext = !eintrag.taetigkeit_id
 
@@ -35,26 +36,28 @@ export function ZeiteintragKarte({ eintrag, onEdit, onDelete }: ZeiteintragKarte
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="min-h-[44px] min-w-[44px]"
-              onClick={() => onEdit(eintrag)}
-              aria-label="Bearbeiten"
-            >
-              Bearbeiten
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
-              onClick={() => onDelete(eintrag)}
-              aria-label="Löschen"
-            >
-              Löschen
-            </Button>
-          </div>
+          {!readonly && (
+            <div className="flex items-center gap-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="min-h-[44px] min-w-[44px]"
+                onClick={() => onEdit(eintrag)}
+                aria-label="Bearbeiten"
+              >
+                Bearbeiten
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
+                onClick={() => onDelete(eintrag)}
+                aria-label="Löschen"
+              >
+                Löschen
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
