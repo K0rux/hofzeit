@@ -52,6 +52,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         { href: '/abwesenheiten', label: 'Abwesenheiten' },
         { href: '/stammdaten', label: 'Stammdaten' },
         { href: '/admin', label: 'Verwaltung' },
+        { href: '/profil', label: 'Profil' },
       ]
     : [
         { href: '/dashboard', label: 'Dashboard' },
@@ -59,6 +60,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         { href: '/abwesenheiten', label: 'Abwesenheiten' },
         { href: '/stammdaten', label: 'Stammdaten' },
         { href: '/export', label: 'Export' },
+        { href: '/profil', label: 'Profil' },
       ]
 
   return (

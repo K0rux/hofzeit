@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Clock, CalendarDays, Download, MoreHorizontal, Database, Shield, LogOut } from 'lucide-react'
+import { Home, Clock, CalendarDays, Download, MoreHorizontal, Database, Shield, LogOut, User } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -31,7 +31,7 @@ export function BottomNav({ isAdmin, onLogout, loggingOut }: BottomNavProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const tabs = isAdmin ? adminTabs : employeeTabs
-  const isMoreActive = pathname === '/stammdaten' || pathname?.startsWith('/admin')
+  const isMoreActive = pathname === '/stammdaten' || pathname === '/profil' || pathname?.startsWith('/admin')
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
@@ -86,6 +86,19 @@ export function BottomNav({ isAdmin, onLogout, loggingOut }: BottomNavProps) {
               >
                 <Database className="h-5 w-5" />
                 Stammdaten
+              </Link>
+              <Link
+                href="/profil"
+                onClick={() => setSheetOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[48px]',
+                  pathname === '/profil'
+                    ? 'bg-muted font-medium'
+                    : 'hover:bg-muted/50'
+                )}
+              >
+                <User className="h-5 w-5" />
+                Profil
               </Link>
               {isAdmin && (
                 <Link

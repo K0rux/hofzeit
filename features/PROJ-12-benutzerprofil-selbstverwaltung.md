@@ -1,6 +1,6 @@
 # PROJ-12: Benutzerprofil-Selbstverwaltung
 
-## Status: In Progress
+## Status: In Review
 **Created:** 2026-02-28
 **Last Updated:** 2026-02-28
 
@@ -159,7 +159,100 @@ Der bestehende `PATCH /api/admin/users/[id]` (Reaktivierung) bleibt unverändert
 Keine neuen Pakete — alle benötigten Komponenten (Dialog, Input, Button, Alert, Sonner, Zod) sind bereits installiert.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-02-28
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+**Build:** Passes (Next.js 16.1.6 Turbopack, 0 errors)
+
+### Acceptance Criteria Status
+
+#### AC-1: Profilseite Mitarbeiter (/profil)
+- [x] Neue Seite `/profil` ist nur für eingeloggte Nutzer zugänglich (client-side Redirect zu `/login`)
+- [x] Die Seite zeigt ein Formular mit Vorname (Pflicht), Nachname (Pflicht), E-Mail (Pflicht)
+- [x] Die Felder sind mit den aktuellen Daten des eingeloggten Nutzers vorausgefüllt
+- [x] Beim Speichern wird Vorname, Nachname in der `profiles`-Tabelle aktualisiert
+- [x] Bei E-Mail-Änderung wird die E-Mail auch in Supabase Auth aktualisiert (`updateUserById`)
+- [x] Nach erfolgreichem Speichern erscheint eine Erfolgsmeldung (Toast via Sonner)
+- [x] Bei ungültiger E-Mail (Format) erscheint eine Fehlermeldung
+- [x] Leere Pflichtfelder (Vorname, Nachname, E-Mail) werden verhindert (client + server)
+- [x] Vorname und Nachname: max. 100 Zeichen (HTML `maxLength` + Zod-Validierung)
+
+#### AC-2: Navigation zur Profilseite
+- [x] Desktop-Navigation enthält den Punkt „Profil" (für alle eingeloggten Nutzer sichtbar)
+- [x] Mobile „Mehr"-Sheet listet „Profil" zusammen mit Stammdaten auf
+- [x] Der Menüpunkt „Profil" ist für Admin und Mitarbeiter gleichermaßen sichtbar
+
+#### AC-3: Admin — Nutzerprofil bearbeiten
+- [x] Im Admin-Bereich gibt es pro Nutzer im Dropdown-Menü den Punkt „Profil bearbeiten"
+- [x] Es öffnet sich ein Dialog mit den Feldern Vorname, Nachname, E-Mail (vorausgefüllt)
+- [x] Admin kann Vorname, Nachname und E-Mail eines Mitarbeiters ändern und speichern
+- [x] Änderungen werden in der `profiles`-Tabelle gespeichert
+- [x] Bei E-Mail-Änderung durch Admin wird die E-Mail auch in Supabase Auth aktualisiert
+- [x] Erfolgsmeldung nach Speichern, Fehlermeldung bei ungültiger E-Mail
+- [x] Validierung: Pflichtfelder, E-Mail-Format, max. 100 Zeichen für Namen
+
+### Edge Cases Status
+
+#### EC-1: Neue E-Mail bereits vergeben
+- [x] Fehlermeldung „Diese E-Mail-Adresse ist bereits vergeben." (Status 409)
+
+#### EC-2: E-Mail-Adresse ist die eigene (unverändert)
+- [x] Formular speichert ohne Fehler; `if (email !== user.email)` verhindert doppelte Verarbeitung
+
+#### EC-3: Vorname/Nachname leer
+- [x] Client-Validierung (`required` + trim-Check) und Server-Validierung (Zod `min(1)`) verhindern Speichern
+
+#### EC-4: E-Mail geändert — muss Nutzer sich neu anmelden?
+- [x] Session bleibt bestehen; Info-Hinweis „Neue E-Mail gilt ab dem nächsten Login" wird angezeigt
+
+#### EC-5: Admin bearbeitet eigenes Profil
+- [x] Gleiche Logik wie Mitarbeiter — „Profil bearbeiten" im Dropdown verfügbar, keine Sonderbehandlung
+
+#### EC-6: Supabase Auth E-Mail-Update schlägt fehl → Rollback
+- [x] Rollback-Logik in `/api/profile/me` liest Werte VOR dem Update und setzt korrekt zurück (fixed)
+- [x] Rollback in `/api/admin/users/[id]/profile` implementiert (fixed)
+
+### Security Audit Results
+
+- [x] **Authentication:** `/api/profile/me` prüft Authentifizierung via `supabase.auth.getUser()` — kein Zugriff ohne Login möglich
+- [x] **Admin Authorization:** `/api/admin/users/[id]/profile` verwendet `verifyAdmin()` — nur Admins können fremde Profile ändern
+- [x] **IDOR-Schutz:** Self-Service-Route verwendet `user.id` aus der verifizierten Session, nicht aus dem Request-Body — kein IDOR möglich
+- [x] **UUID-Validierung:** Admin-Route validiert User-ID-Format mit Regex
+- [x] **Input-Validierung:** Beide Routes nutzen Zod-Schemas (min/max, email-Format)
+- [x] **XSS-Schutz:** React escaped Output; Input hat `maxLength`
+- [x] **Service-Role-Key:** Nur serverseitig verwendet, nicht exponiert
+- [x] **RLS:** Self-Service-Route nutzt User-Client für `profiles.update()` (fixed)
+
+### Bugs Found
+
+#### BUG-1: Rollback-Logik in `/api/profile/me` verwendete falsche Werte — FIXED
+- **Severity:** High → Fixed
+- **Root Cause:** Rollback nutzte `user_metadata` (Werte bei Erstellung, nie aktualisiert); Fallback war der neue Wert.
+- **Fix:** Profil-Werte VOR dem Update aus `profiles`-Tabelle lesen und für Rollback verwenden.
+
+#### BUG-2: Admin-Route fehlender Rollback bei Auth-Fehler — FIXED
+- **Severity:** High → Fixed
+- **Root Cause:** Kein Rollback-Code nach Auth-Fehler — `profiles` behielt neue Werte trotz Fehler.
+- **Fix:** Profil-Werte VOR dem Update lesen; bei Auth-Fehler und E-Mail-Konflikt zurücksetzen.
+
+#### BUG-3: Self-Service-Route umging RLS — FIXED
+- **Severity:** Medium → Fixed
+- **Root Cause:** `adminClient` wurde für `profiles.update()` verwendet — umgeht RLS Defense-in-Depth.
+- **Fix:** `profiles.update()` über User-Client (`supabase`); Admin-Client nur für `auth.admin.updateUserById()`.
+
+#### BUG-4: `listUsers()` ohne Pagination — FIXED
+- **Severity:** Low → Fixed
+- **Root Cause:** `listUsers()` ohne `perPage` (Standard: 50), inkonsistent mit anderen Routes.
+- **Fix:** `listUsers({ perPage: 1000 })` in beiden Routes.
+
+### Summary
+- **Acceptance Criteria:** 19/19 passed
+- **Edge Cases:** 6/6 passed (after fixes)
+- **Bugs Fixed:** 4/4 (2 High, 1 Medium, 1 Low)
+- **Security:** Alle Findings behoben
+- **Build:** Passes ohne Fehler
+- **Production Ready:** **YES**
 
 ## Deployment
 _To be added by /deploy_

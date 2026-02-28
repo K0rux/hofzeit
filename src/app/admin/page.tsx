@@ -31,6 +31,7 @@ import { DeaktivierenDialog } from '@/components/admin/deaktivieren-dialog'
 import { AktivierenDialog } from '@/components/admin/aktivieren-dialog'
 import { BerichtDialog } from '@/components/admin/bericht-dialog'
 import { ArbeitszeitprofilDialog } from '@/components/admin/arbeitszeitprofil-dialog'
+import { ProfilBearbeitenDialog } from '@/components/admin/profil-bearbeiten-dialog'
 import { MonatsabschlussPanel } from '@/components/admin/monatsabschluss-panel'
 
 export default function AdminPage() {
@@ -47,6 +48,7 @@ export default function AdminPage() {
   const [activateUser, setActivateUser] = useState<UserProfile | null>(null)
   const [berichtUser, setBerichtUser] = useState<UserProfile | null>(null)
   const [profilUser, setProfilUser] = useState<UserProfile | null>(null)
+  const [editProfileUser, setEditProfileUser] = useState<UserProfile | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setError(null)
@@ -185,6 +187,11 @@ export default function AdminPage() {
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
+                                onClick={() => setEditProfileUser(user)}
+                              >
+                                Profil bearbeiten
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() => setRoleChangeUser(user)}
                                 disabled={user.id === currentUserId}
                               >
@@ -264,6 +271,12 @@ export default function AdminPage() {
         open={!!profilUser}
         onOpenChange={(open) => !open && setProfilUser(null)}
         user={profilUser}
+      />
+      <ProfilBearbeitenDialog
+        open={!!editProfileUser}
+        onOpenChange={(open) => !open && setEditProfileUser(null)}
+        user={editProfileUser}
+        onSuccess={handleSuccess}
       />
     </AppLayout>
   )
