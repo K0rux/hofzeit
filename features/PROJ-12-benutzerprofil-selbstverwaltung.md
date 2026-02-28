@@ -1,6 +1,6 @@
 # PROJ-12: Benutzerprofil-Selbstverwaltung
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-02-28
 **Last Updated:** 2026-02-28
 
@@ -255,4 +255,8 @@ Keine neuen Pakete — alle benötigten Komponenten (Dialog, Input, Button, Aler
 - **Production Ready:** **YES**
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-02-28
+**Production URL:** https://hofzeit.vercel.app
+**Commit:** `9fba590` feat(PROJ-12): Implement Benutzerprofil-Selbstverwaltung
+**Git Tag:** v1.12.0-PROJ-12
