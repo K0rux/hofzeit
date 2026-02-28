@@ -82,7 +82,79 @@ Fünf gebündelte Verbesserungen der bestehenden UI: (1) Das Mitarbeiter-Dashboa
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Scope & Approach
+Rein frontend-seitige Änderungen. Keine neuen API-Endpunkte, keine neuen Datenbanktabellen, keine RLS-Änderungen.
+
+### Komponentenstruktur
+
+```
+A) Employee Dashboard (dashboard/page.tsx) – CHANGE
+   +-- WochenstundenKarte (NEW component)
+   |   +-- Skeleton (loading)
+   |   +-- "X / Y Std. diese Woche" (Ist vs. Soll)
+   |   +-- Fallback-Hinweis (wenn kein Arbeitszeitprofil)
+   +-- UrlaubskontoKarte (existing, unchanged)
+   +-- MonatsuebersichtKarte (existing, unchanged)
+
+B) Admin Dashboard (dashboard/page.tsx) – CHANGE
+   +-- AdminMonatsabschlussUebersicht (NEW component)
+       +-- Monat-Überschrift ("Offene Monatsabschlüsse – Januar 2026")
+       +-- Tabelle: Name | Status | Aktion
+       |   +-- Badge "Offen" (rot)
+       |   +-- Badge "Abgeschlossen" (grün)
+       |   +-- Button "Abschließen" → bestehenden AbschliessenDialog
+       +-- Erfolgsmeldung (wenn alle abgeschlossen)
+       +-- Skeleton Loading State
+
+C) Stammdaten-Seite (stammdaten/page.tsx) – CHANGE
+   +-- Tabs (role-aware)
+       +-- "Tätigkeiten" Tab → nur für Mitarbeiter (hidden für Admin)
+       +-- "Kostenstellen" Tab → für alle (Default für Admin)
+
+D) Navigation – CHANGE
+   +-- AppLayout (app-layout.tsx)
+   |   +-- Desktop navLinks: "Abwesenheiten" aus Admin-Liste entfernt
+   +-- BottomNav (bottom-nav.tsx)
+       +-- adminTabs: "Abwesend" aus Tab-Leiste entfernt
+       +-- Safe-area padding via CSS env(safe-area-inset-bottom)
+
+E) PDF-Export (export/page.tsx) – CHANGE
+   +-- first_name + last_name aus Profil zusammensetzen
+   +-- Fallback: E-Mail wenn kein Name hinterlegt
+```
+
+### Datenflüsse
+
+| Datenquelle | Verwendet für |
+|---|---|
+| `/api/zeiteintraege?von=…&bis=…` | Wochenstunden-Karte: Zeiteinträge Mo–So summieren |
+| `/api/arbeitszeitprofile/me` | Soll-Stunden pro Woche berechnen (existing) |
+| `/api/admin/monatsabschluesse` | Admin-Dashboard: Status aller Mitarbeiter für einen Monat |
+| `/api/admin/users` | Admin-Dashboard: Mitarbeiternamen zur UserId aufschlüsseln |
+| Supabase `profiles.first_name` + `last_name` | PDF: Namen statt E-Mail |
+
+### Technische Entscheidungen
+
+| Entscheidung | Begründung |
+|---|---|
+| Keine neuen API-Endpunkte | Alle Daten über bestehende Routen abrufbar |
+| Neue `WochenstundenKarte`-Komponente | Eigene Karte hält Dashboard-Grid symmetrisch |
+| Neue `AdminMonatsabschlussUebersicht`-Komponente | Wiederverwendet bestehenden `AbschliessenDialog`; trennt Admin/Employee-Dashboard |
+| `env(safe-area-inset-bottom)` CSS | Webstandard für iPhone Home Indicator; kein Plugin nötig |
+| `defaultValue="kostenstellen"` für Admin im Stammdaten-Tab | Wenn Tätigkeiten-Tab ausgeblendet, muss Default auf Kostenstellen gesetzt sein |
+
+### Betroffene Dateien
+
+| Datei | Art |
+|---|---|
+| `src/app/dashboard/page.tsx` | Wochenstunden-Fetch + WochenstundenKarte + Admin-Dashboard-Sektion |
+| `src/components/dashboard/wochenstunden-karte.tsx` | **Neue Komponente** |
+| `src/components/dashboard/admin-monatsabschluss-uebersicht.tsx` | **Neue Komponente** |
+| `src/components/app-layout.tsx` | "Abwesenheiten" aus Admin-navLinks entfernen |
+| `src/components/bottom-nav.tsx` | "Abwesend" aus adminTabs entfernen + safe-area padding |
+| `src/app/stammdaten/page.tsx` | Tätigkeiten-Tab für Admin ausblenden + defaultValue anpassen |
+| `src/app/export/page.tsx` | first_name + last_name statt Email für `userName` |
 
 ## QA Test Results
 _To be added by /qa_

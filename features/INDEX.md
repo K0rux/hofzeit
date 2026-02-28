@@ -24,7 +24,7 @@
 | PROJ-10 | Monatsabschluss | Deployed | [PROJ-10-monatsabschluss.md](PROJ-10-monatsabschluss.md) | 2026-02-22 |
 | PROJ-11 | Admin-Bereich Überarbeitung | Deployed | [PROJ-11-admin-ueberarbeitung.md](PROJ-11-admin-ueberarbeitung.md) | 2026-02-22 |
 | PROJ-12 | Benutzerprofil-Selbstverwaltung | Deployed | [PROJ-12-benutzerprofil-selbstverwaltung.md](PROJ-12-benutzerprofil-selbstverwaltung.md) | 2026-02-28 |
-| PROJ-13 | UI/Dashboard-Verbesserungen | Planned | [PROJ-13-ui-dashboard-verbesserungen.md](PROJ-13-ui-dashboard-verbesserungen.md) | 2026-02-28 |
+| PROJ-13 | UI/Dashboard-Verbesserungen | In Progress | [PROJ-13-ui-dashboard-verbesserungen.md](PROJ-13-ui-dashboard-verbesserungen.md) | 2026-02-28 |
 
 <!-- Add features above this line -->
 
