@@ -74,11 +74,12 @@ export default function ExportPage() {
       if (user) {
         supabase
           .from('profiles')
-          .select('full_name')
+          .select('first_name, last_name')
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
-            setUserName(data?.full_name ?? user.email ?? '')
+            const fullName = [data?.first_name, data?.last_name].filter(Boolean).join(' ')
+            setUserName(fullName || user.email || '')
           })
       }
     })

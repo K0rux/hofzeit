@@ -49,7 +49,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navLinks = isAdmin
     ? [
         { href: '/dashboard', label: 'Dashboard' },
-        { href: '/abwesenheiten', label: 'Abwesenheiten' },
         { href: '/stammdaten', label: 'Stammdaten' },
         { href: '/admin', label: 'Verwaltung' },
         { href: '/profil', label: 'Profil' },

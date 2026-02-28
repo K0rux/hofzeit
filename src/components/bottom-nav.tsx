@@ -23,7 +23,6 @@ const employeeTabs = [
 
 const adminTabs = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/abwesenheiten', label: 'Abwesend', icon: CalendarDays },
 ]
 
 export function BottomNav({ isAdmin, onLogout, loggingOut }: BottomNavProps) {
@@ -34,8 +33,8 @@ export function BottomNav({ isAdmin, onLogout, loggingOut }: BottomNavProps) {
   const isMoreActive = pathname === '/stammdaten' || pathname === '/profil' || pathname?.startsWith('/admin')
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
-      <div className="flex items-center justify-around h-16 px-1 pb-5">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="flex items-center justify-around h-16 px-1">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = pathname === tab.href

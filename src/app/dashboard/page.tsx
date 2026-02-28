@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AppLayout } from '@/components/app-layout'
 import { UrlaubskontoKarte } from '@/components/dashboard/urlaubskonto-karte'
 import { MonatsuebersichtKarte } from '@/components/dashboard/monatsuebersicht-karte'
+import { WochenstundenKarte } from '@/components/dashboard/wochenstunden-karte'
+import { AdminMonatsabschlussUebersicht } from '@/components/dashboard/admin-monatsabschluss-uebersicht'
 import { berechneAnzahlTage } from '@/components/abwesenheiten/types'
 import { createClient } from '@/lib/supabase'
 
@@ -87,6 +89,36 @@ function getMonatsBounds(jahr: number, monat: number): { von: string; bis: strin
   }
 }
 
+function getWochenBounds(): { von: string; bis: string } {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const now = new Date()
+  const day = now.getDay() // 0=Sun
+  const diffToMonday = day === 0 ? -6 : 1 - day
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + diffToMonday)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  return {
+    von: `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`,
+    bis: `${sunday.getFullYear()}-${pad(sunday.getMonth() + 1)}-${pad(sunday.getDate())}`,
+  }
+}
+
+interface AdminUser {
+  id: string
+  first_name: string
+  last_name: string
+  role: string
+  is_active: boolean
+}
+
+interface Monatsabschluss {
+  id: string
+  user_id: string
+  jahr: number
+  monat: number
+}
+
 export default function DashboardPage() {
   const now = new Date()
   const jahr = now.getFullYear()
@@ -97,6 +129,38 @@ export default function DashboardPage() {
   const [profil, setProfil] = useState<Arbeitszeitprofil | null>(null)
   const [urlaubGenommen, setUrlaubGenommen] = useState(0)
   const [istStunden, setIstStunden] = useState(0)
+  const [wochenIstStunden, setWochenIstStunden] = useState(0)
+
+  // Admin state
+  const [adminLoading, setAdminLoading] = useState(true)
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([])
+  const [adminAbschluesse, setAdminAbschluesse] = useState<Monatsabschluss[]>([])
+
+  // Determine the relevant month for Monatsabschluss (previous month)
+  const abschlussMonat = monat === 0 ? 12 : monat // 1-indexed previous month
+  const abschlussJahr = monat === 0 ? jahr - 1 : jahr
+
+  const loadAdminData = useCallback(async () => {
+    setAdminLoading(true)
+    try {
+      const [usersRes, abschluesseRes] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/admin/monatsabschluesse'),
+      ])
+
+      if (usersRes.ok) {
+        const usersData = await usersRes.json()
+        setAdminUsers(usersData.users ?? [])
+      }
+
+      if (abschluesseRes.ok) {
+        const abschluesseData: Monatsabschluss[] = await abschluesseRes.json()
+        setAdminAbschluesse(abschluesseData)
+      }
+    } finally {
+      setAdminLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -113,18 +177,23 @@ export default function DashboardPage() {
             .single()
           setRole(profile?.role ?? null)
 
-          // Admins don't have an Arbeitszeitprofil – skip all further fetches
-          if (profile?.role === 'admin') return
+          // Admins don't have an Arbeitszeitprofil – skip employee fetches
+          if (profile?.role === 'admin') {
+            loadAdminData()
+            return
+          }
         }
 
         const { von, bis } = getMonatsBounds(jahr, monat)
         const jahresStart = `${jahr}-01-01`
         const jahresEnde = `${jahr}-12-31`
+        const woche = getWochenBounds()
 
-        const [profilRes, abwRes, zeitRes] = await Promise.all([
+        const [profilRes, abwRes, zeitRes, wochenZeitRes] = await Promise.all([
           fetch('/api/arbeitszeitprofile/me'),
           fetch(`/api/abwesenheiten?von=${jahresStart}&bis=${jahresEnde}`),
           fetch(`/api/zeiteintraege?von=${von}&bis=${bis}`),
+          fetch(`/api/zeiteintraege?von=${woche.von}&bis=${woche.bis}`),
         ])
 
         const profilData = profilRes.ok ? await profilRes.json() : null
@@ -147,17 +216,38 @@ export default function DashboardPage() {
           const total = zeitData.reduce((sum, z) => sum + z.dauer_stunden, 0)
           setIstStunden(total)
         }
+
+        if (wochenZeitRes.ok) {
+          const wochenData: { dauer_stunden: number }[] = await wochenZeitRes.json()
+          const total = wochenData.reduce((sum, z) => sum + z.dauer_stunden, 0)
+          setWochenIstStunden(total)
+        }
       } finally {
         setLoading(false)
       }
     }
 
     load()
-  }, [jahr, monat])
+  }, [jahr, monat, loadAdminData])
 
   const sollStunden = profil
     ? berechneMonatsSollStunden(profil, jahr, monat)
     : 0
+
+  // Build admin Monatsabschluss list
+  const mitarbeiterStatus = adminUsers
+    .filter((u) => u.role === 'employee' && u.is_active)
+    .map((u) => {
+      const abschluss = adminAbschluesse.find(
+        (a) => a.user_id === u.id && a.jahr === abschlussJahr && a.monat === abschlussMonat
+      )
+      return {
+        userId: u.id,
+        name: `${u.first_name} ${u.last_name}`.trim() || u.id,
+        status: abschluss ? 'abgeschlossen' as const : 'offen' as const,
+        abschlussId: abschluss?.id,
+      }
+    })
 
   return (
     <AppLayout>
@@ -168,16 +258,20 @@ export default function DashboardPage() {
         </div>
 
         {role === 'admin' ? (
-          <p className="text-sm text-muted-foreground">
-            Als Administrator stehen hier keine persönlichen Kennzahlen zur Verfügung.
-          </p>
+          <AdminMonatsabschlussUebersicht
+            loading={adminLoading}
+            mitarbeiter={mitarbeiterStatus}
+            jahr={abschlussJahr}
+            monat={abschlussMonat}
+            onRefresh={loadAdminData}
+          />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <UrlaubskontoKarte
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <WochenstundenKarte
               loading={loading}
               hasProfile={!!profil}
-              jahresanspruch={profil?.urlaubstage_jahr ?? 0}
-              genommen={urlaubGenommen}
+              istStunden={wochenIstStunden}
+              sollStunden={profil ? profil.wochenstunden : null}
             />
             <MonatsuebersichtKarte
               loading={loading}
@@ -186,6 +280,14 @@ export default function DashboardPage() {
               sollStunden={sollStunden}
               istStunden={istStunden}
             />
+            <div className="sm:col-span-2 lg:col-span-1">
+              <UrlaubskontoKarte
+                loading={loading}
+                hasProfile={!!profil}
+                jahresanspruch={profil?.urlaubstage_jahr ?? 0}
+                genommen={urlaubGenommen}
+              />
+            </div>
           </div>
         )}
       </div>

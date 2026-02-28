@@ -37,20 +37,22 @@ export function UrlaubskontoKarte({
             Kein Arbeitszeitprofil hinterlegt.
           </p>
         ) : (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Jahresanspruch</span>
-              <span>{jahresanspruch} Tage</span>
+          <div className="space-y-3">
+            <div>
+              <p className={cn('text-2xl font-bold tabular-nums', isOverdrawn ? 'text-destructive' : 'text-emerald-600')}>
+                {verbleibend}
+              </p>
+              <p className="text-sm text-muted-foreground">verbleibende Tage</p>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Genommen</span>
-              <span>{genommen} Tage</span>
-            </div>
-            <div className="border-t pt-2 flex justify-between text-sm font-semibold">
-              <span>Verbleibend</span>
-              <span className={cn(isOverdrawn ? 'text-destructive' : 'text-emerald-600')}>
-                {verbleibend} Tage
-              </span>
+            <div className="border-t pt-2 space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Anspruch</span>
+                <span>{jahresanspruch} Tage</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Genommen</span>
+                <span>{genommen} Tage</span>
+              </div>
             </div>
           </div>
         )}

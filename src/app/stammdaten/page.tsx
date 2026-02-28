@@ -22,6 +22,7 @@ import type { Taetigkeit, Kostenstelle } from '@/components/stammdaten/types'
 
 export default function StammdatenPage() {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>('kostenstellen')
 
   // Tätigkeiten state
   const [taetigkeiten, setTaetigkeiten] = useState<Taetigkeit[]>([])
@@ -89,7 +90,9 @@ export default function StammdatenPage() {
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
-            setIsAdmin(data?.role === 'admin')
+            const admin = data?.role === 'admin'
+            setIsAdmin(admin)
+            setActiveTab(admin ? 'kostenstellen' : 'taetigkeiten')
           })
       }
     })
@@ -136,9 +139,9 @@ export default function StammdatenPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="taetigkeiten">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="taetigkeiten">Tätigkeiten</TabsTrigger>
+            {!isAdmin && <TabsTrigger value="taetigkeiten">Tätigkeiten</TabsTrigger>}
             <TabsTrigger value="kostenstellen">Kostenstellen</TabsTrigger>
           </TabsList>
 
