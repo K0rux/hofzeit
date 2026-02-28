@@ -1,8 +1,8 @@
 # PROJ-9: Mitarbeiter-Arbeitszeitprofil
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-02-22
-**Last Updated:** 2026-02-22
+**Last Updated:** 2026-02-28
 
 ## Dependencies
 - Requires: PROJ-1 (Benutzerauthentifizierung) – Nutzer muss eingeloggt sein
@@ -53,7 +53,121 @@ Der Admin kann für jeden Mitarbeiter ein Arbeitszeitprofil hinterlegen: Jährli
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Überblick: 3 Bereiche
+
+#### 1. Admin – Arbeitszeitprofil-Verwaltung
+
+Neuer Menüpunkt „Arbeitszeitprofil bearbeiten" im bestehenden Dropdown pro Benutzer in der Admin-Tabelle. Öffnet einen Dialog zum Anlegen/Bearbeiten des Profils.
+
+```
+Admin-Seite (existing)
++-- Benutzertabelle (existing)
+    +-- Dropdown per Benutzer (existing)
+        +-- "Arbeitszeitprofil bearbeiten"  ← NEU
++-- ArbeitszeitprofilDialog                ← NEU
+    +-- Urlaubstage/Jahr (Zahl, z.B. 30)
+    +-- Arbeitstage (Checkboxen: Mo Di Mi Do Fr Sa So)
+    +-- Wochenstunden (Dezimalzahl, z.B. 40.0)
+    +-- Status: "Kein Profil vorhanden" wenn noch keines hinterlegt
+    +-- Speichern / Abbrechen
+```
+
+#### 2. Dashboard – Mitarbeiter-Übersicht
+
+Die leere `/dashboard`-Seite (aktuell Platzhalter) wird zur Übersichtsseite mit zwei Karten.
+
+```
+DashboardPage (existing, jetzt befüllt)
++-- UrlaubskontoKarte                      ← NEU
+|   +-- Jahresanspruch: 30 Tage
+|   +-- Genommen: 5 Tage (aus Urlaub-Abwesenheiten)
+|   +-- Verbleibend: 25 Tage (grün / rot bei Überschreitung)
+|   ODER: "Kein Arbeitszeitprofil hinterlegt"
++-- MonatsübersichtKarte                   ← NEU
+    +-- Soll-Stunden: 160h (Arbeitstage im Monat × Tagesstunden)
+    +-- Ist-Stunden: 128h (aus erfassten Zeiteinträgen)
+    +-- Differenz: −32h
+    ODER: "Kein Arbeitszeitprofil hinterlegt"
+```
+
+#### 3. Zeiterfassung – Tages-Farbkennzeichnung
+
+Das bestehende Datum im Tagesnavigator erhält einen zweiten farbigen Dot – konsistent mit dem bestehenden Abwesenheits-Dot-Design.
+
+```
+Tagesnavigation (existing, erweitert)
++-- ← / → Navigation
++-- Datum-Button
+    +-- Datum-Text (existing)
+    +-- Abwesenheits-Dot (existing: grün/rot)
+    +-- Stunden-Dot (NEU: grün = Soll erreicht, gelb = Einträge vorhanden aber unter Soll)
++-- Heute-Button
+```
+
+Kein Dot bei: kein Profil vorhanden, kein regulärer Arbeitstag, oder keine Einträge.
+
+---
+
+### Datenmodell
+
+**Neue Tabelle: `arbeitszeitprofile`**
+
+| Feld | Typ | Beispiel |
+|------|-----|---------|
+| `id` | UUID | auto |
+| `user_id` | UUID (unique) | → Mitarbeiter |
+| `urlaubstage_jahr` | Ganzzahl | 30 |
+| `arbeitstage` | Text-Array | `['Mo','Di','Mi','Do','Fr']` |
+| `wochenstunden` | Dezimalzahl | 40.0 |
+| `created_at` / `updated_at` | Timestamp | auto |
+
+**RLS:**
+- Admin: alle Profile lesen & schreiben
+- Mitarbeiter: nur eigenes Profil lesen (kein Schreiben)
+
+---
+
+### API Routes (neu)
+
+| Route | Zweck |
+|-------|-------|
+| `GET /api/arbeitszeitprofile/me` | Mitarbeiter lädt eigenes Profil |
+| `GET /api/admin/arbeitszeitprofile/[userId]` | Admin lädt Profil eines Nutzers |
+| `PUT /api/admin/arbeitszeitprofile/[userId]` | Admin erstellt / aktualisiert Profil (UPSERT) |
+
+**Bestehende APIs wiederverwendet:**
+- `GET /api/zeiteintraege?von=...&bis=...` – Monatsstunden (bereits vorhanden)
+- `GET /api/abwesenheiten` – Urlaub-Tage für Urlaubskonto
+
+---
+
+### Tech-Entscheidungen
+
+| Entscheidung | Wahl | Warum |
+|---|---|---|
+| Stunden-Berechnung | Client-seitig | Einfache Mathematik aus Profildaten, kein extra Server-Round-Trip |
+| Übersichtsseite | Dashboard (`/dashboard`) | Aktuell leerer Platzhalter, idealer Ort für Mitarbeiter-Kennzahlen |
+| Farbkennzeichnung | Dot im Tages-Button | Konsistent mit Abwesenheits-Dot, kein Layout-Shift, mobile-freundlich |
+| Profil anlegen/aktualisieren | UPSERT | Max. 1 Profil pro Nutzer, create und update in einem Schritt |
+| Neue Packages | Keine | Checkbox, Card, Input bereits via shadcn/ui vorhanden |
+
+---
+
+### Betroffene Dateien
+
+**Neu:**
+- `src/app/api/arbeitszeitprofile/me/route.ts`
+- `src/app/api/admin/arbeitszeitprofile/[userId]/route.ts`
+- `src/components/admin/arbeitszeitprofil-dialog.tsx`
+- `src/components/dashboard/urlaubskonto-karte.tsx`
+- `src/components/dashboard/monatsuebersicht-karte.tsx`
+
+**Geändert:**
+- `src/app/admin/page.tsx` – neuer Dropdown-Eintrag + Dialog einbinden
+- `src/app/dashboard/page.tsx` – von Platzhalter zu Übersicht
+- `src/components/zeiterfassung/tagesnavigation.tsx` – zweiter Stunden-Dot
+- Supabase: neue Tabelle `arbeitszeitprofile` + RLS-Policies
 
 ## QA Test Results
 _To be added by /qa_
