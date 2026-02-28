@@ -40,17 +40,31 @@ export default function ZeiterfassungPage() {
   // Absences for current day
   const [tagesAbwesenheiten, setTagesAbwesenheiten] = useState<Abwesenheit[]>([])
 
-  // Fetch taetigkeiten + kostenstellen once
+  // Arbeitszeitprofil for Stunden-Dot
+  const [tagessollStunden, setTagessollStunden] = useState<number | null>(null)
+  const [arbeitstageProfile, setArbeitstageProfile] = useState<string[]>([])
+
+  // Fetch taetigkeiten + kostenstellen + arbeitszeitprofil once
   useEffect(() => {
     async function fetchMasterData() {
-      const [tRes, kRes] = await Promise.all([
+      const [tRes, kRes, profilRes] = await Promise.all([
         fetch('/api/taetigkeiten'),
         fetch('/api/kostenstellen'),
+        fetch('/api/arbeitszeitprofile/me'),
       ])
       const [tData, kData] = await Promise.all([tRes.json(), kRes.json()])
       setTaetigkeiten(Array.isArray(tData) ? tData : [])
       setKostenstellen(Array.isArray(kData) ? kData : [])
       setMasterDataLoaded(true)
+
+      if (profilRes.ok) {
+        const profil = await profilRes.json()
+        if (profil && Array.isArray(profil.arbeitstage) && profil.wochenstunden > 0) {
+          const tageProWoche = profil.arbeitstage.length
+          setTagessollStunden(tageProWoche > 0 ? profil.wochenstunden / tageProWoche : null)
+          setArbeitstageProfile(profil.arbeitstage)
+        }
+      }
     }
     fetchMasterData()
   }, [])
@@ -112,6 +126,19 @@ export default function ZeiterfassungPage() {
 
   const noKostenstellen = masterDataLoaded && kostenstellen.length === 0
 
+  // Determine Stunden-Dot status for the current day
+  const DAY_MAP: Record<string, number> = { Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6, So: 0 }
+  function getStundenStatus(): 'erreicht' | 'teilweise' | null {
+    if (tagessollStunden === null || eintraege.length === 0) return null
+    // No dot on non-working days (spec: "Der Tag wird nicht als Soll-Tag gewertet")
+    if (arbeitstageProfile.length > 0) {
+      const wochentag = new Date(datum + 'T12:00:00').getDay()
+      const arbeitstageNummern = new Set(arbeitstageProfile.map((d) => DAY_MAP[d]).filter((n) => n !== undefined))
+      if (!arbeitstageNummern.has(wochentag)) return null
+    }
+    return gesamtStunden >= tagessollStunden ? 'erreicht' : 'teilweise'
+  }
+
   return (
     <AppLayout>
       <div className="space-y-4 pb-24">
@@ -126,6 +153,7 @@ export default function ZeiterfassungPage() {
           datum={datum}
           onDatumChange={handleDatumChange}
           abwesenheitTyp={tagesAbwesenheiten[0]?.typ ?? null}
+          stundenStatus={loading ? null : getStundenStatus()}
         />
 
         {/* Abwesenheits-Banner */}

@@ -20,7 +20,7 @@
 | PROJ-6 | PDF-Export | Deployed | [PROJ-6-pdf-export.md](PROJ-6-pdf-export.md) | 2026-02-20 |
 | PROJ-7 | PWA & Mobile Optimierung | Deployed | [PROJ-7-pwa-mobile-optimierung.md](PROJ-7-pwa-mobile-optimierung.md) | 2026-02-22 |
 | PROJ-8 | UI/UX Redesign & Branding | Deployed | [PROJ-8-ui-redesign-branding.md](PROJ-8-ui-redesign-branding.md) | 2026-02-22 |
-| PROJ-9 | Mitarbeiter-Arbeitszeitprofil | In Progress | [PROJ-9-arbeitszeitprofil.md](PROJ-9-arbeitszeitprofil.md) | 2026-02-22 |
+| PROJ-9 | Mitarbeiter-Arbeitszeitprofil | In Review | [PROJ-9-arbeitszeitprofil.md](PROJ-9-arbeitszeitprofil.md) | 2026-02-22 |
 | PROJ-10 | Monatsabschluss | Planned | [PROJ-10-monatsabschluss.md](PROJ-10-monatsabschluss.md) | 2026-02-22 |
 | PROJ-11 | Admin-Bereich Überarbeitung | Deployed | [PROJ-11-admin-ueberarbeitung.md](PROJ-11-admin-ueberarbeitung.md) | 2026-02-22 |
 

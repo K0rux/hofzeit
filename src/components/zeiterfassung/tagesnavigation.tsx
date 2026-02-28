@@ -9,9 +9,11 @@ interface TagesnavigationProps {
   datum: string // YYYY-MM-DD
   onDatumChange: (datum: string) => void
   abwesenheitTyp?: 'urlaub' | 'krankheit' | null
+  // 'erreicht' = green (daily target met), 'teilweise' = yellow (entries but below target)
+  stundenStatus?: 'erreicht' | 'teilweise' | null
 }
 
-export function Tagesnavigation({ datum, onDatumChange, abwesenheitTyp }: TagesnavigationProps) {
+export function Tagesnavigation({ datum, onDatumChange, abwesenheitTyp, stundenStatus }: TagesnavigationProps) {
   const dateInputRef = useRef<HTMLInputElement>(null)
   const today = getTodayStr()
   const isToday = datum === today
@@ -38,14 +40,27 @@ export function Tagesnavigation({ datum, onDatumChange, abwesenheitTyp }: Tagesn
         >
           <span className="sm:hidden">{formatDateDECompact(datum)}</span>
           <span className="hidden sm:inline">{formatDateDE(datum)}</span>
-          {abwesenheitTyp && (
-            <span
-              className={cn(
-                'mt-0.5 h-1.5 w-1.5 rounded-full',
-                abwesenheitTyp === 'urlaub' ? 'bg-emerald-500' : 'bg-red-500'
+          {(abwesenheitTyp || stundenStatus) && (
+            <span className="mt-0.5 flex gap-0.5">
+              {abwesenheitTyp && (
+                <span
+                  className={cn(
+                    'h-1.5 w-1.5 rounded-full',
+                    abwesenheitTyp === 'urlaub' ? 'bg-emerald-500' : 'bg-red-500'
+                  )}
+                  aria-label={abwesenheitTyp === 'urlaub' ? 'Urlaub' : 'Krankheit'}
+                />
               )}
-              aria-label={abwesenheitTyp === 'urlaub' ? 'Urlaub' : 'Krankheit'}
-            />
+              {stundenStatus && (
+                <span
+                  className={cn(
+                    'h-1.5 w-1.5 rounded-full',
+                    stundenStatus === 'erreicht' ? 'bg-emerald-500' : 'bg-amber-400'
+                  )}
+                  aria-label={stundenStatus === 'erreicht' ? 'Sollstunden erreicht' : 'Einträge vorhanden'}
+                />
+              )}
+            </span>
           )}
         </button>
         <input

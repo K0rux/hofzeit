@@ -29,6 +29,7 @@ import { RolleAendernDialog } from '@/components/admin/rolle-aendern-dialog'
 import { DeaktivierenDialog } from '@/components/admin/deaktivieren-dialog'
 import { AktivierenDialog } from '@/components/admin/aktivieren-dialog'
 import { BerichtDialog } from '@/components/admin/bericht-dialog'
+import { ArbeitszeitprofilDialog } from '@/components/admin/arbeitszeitprofil-dialog'
 
 export default function AdminPage() {
   const [users, setUsers] = useState<UserProfile[]>([])
@@ -43,6 +44,7 @@ export default function AdminPage() {
   const [deactivateUser, setDeactivateUser] = useState<UserProfile | null>(null)
   const [activateUser, setActivateUser] = useState<UserProfile | null>(null)
   const [berichtUser, setBerichtUser] = useState<UserProfile | null>(null)
+  const [profilUser, setProfilUser] = useState<UserProfile | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setError(null)
@@ -164,6 +166,13 @@ export default function AdminPage() {
                           >
                             Bericht herunterladen
                           </DropdownMenuItem>
+                          {user.role === 'employee' && (
+                            <DropdownMenuItem
+                              onClick={() => setProfilUser(user)}
+                            >
+                              Arbeitszeitprofil
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => setRoleChangeUser(user)}
                             disabled={user.id === currentUserId}
@@ -232,6 +241,11 @@ export default function AdminPage() {
         open={!!berichtUser}
         onOpenChange={(open) => !open && setBerichtUser(null)}
         user={berichtUser}
+      />
+      <ArbeitszeitprofilDialog
+        open={!!profilUser}
+        onOpenChange={(open) => !open && setProfilUser(null)}
+        user={profilUser}
       />
     </AppLayout>
   )
